@@ -48,6 +48,8 @@ exercised in the path being submitted.
 | 18 | `pytest` | `pytest==9.1.1`; 287 passing tests |
 | 19 | `Cloud Run` | service `harbor-storm` in `us-central1` serving the portal publicly at <https://harbor-storm-801248256447.us-central1.run.app> (deployed 2026-08-30); one pinned instance per `deploy/service.yaml`'s trace-ordering rationale; Firestore-durable runs (database `harbor`) |
 | 20 | `Cloud Build` | built image `…/harbor/harbor-storm:portal-5bf0794` from the submitted tree, 2026-08-30 |
+| 22 | `Cloud Scheduler` | job `relief-observe` (`*/30 * * * *`, ENABLED, `us-central1`) re-observes the standing ReliefRun mission on the deployed service; observations are content-addressed, so a redelivery applies at most once |
+| 23 | `Google Weather API (live lane)` | the deployed service runs `WEATHER_PROVIDER=google` with real Rasuwa-region coordinates via `SITES_JSON` (`/relief/config` reports them); first live observation re-verified the standing commitment against a real forecast (severe hours `[]` at capture — the commitment survived, which is the honest outcome of calm weather) |
 
 ### Dropped after investigation
 

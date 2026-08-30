@@ -314,13 +314,17 @@ negative control is in `tests/test_reliefrun.py`: under a benign forecast the
 first-light departure survives untouched. The sentinel watches this scenario
 too, so the same story runs across wall-clock ticks.
 
-**It is deployed.** The live lane runs at
+**It is deployed, and it is live.** The lane runs at
 <https://harbor-storm-801248256447.us-central1.run.app/relief> — Cloud Run,
 one pinned instance (see `deploy/service.yaml` for why), runs durable in
 Firestore (database `harbor`), and the frozen classic dashboard at the root
-of the same service. The page's badges state exactly which lane the instance
-is on; the deterministic seeded lane is the reference there exactly as it is
-locally. Locally the same surface is
+of the same service. The deployed instance reads **real Google Weather for
+real Rasuwa-region coordinates** (supplied via `SITES_JSON`; `/relief/config`
+reports them), and a Cloud Scheduler job re-observes the standing mission
+every 30 minutes: most observations confirm the commitment against the real
+forecast, and a moved forecast revokes it through the same verifier —
+unattended. The page's badges state exactly which lane the instance is on;
+the deterministic seeded lane remains the reference path locally. Locally the same surface is
 `.venv/bin/python -m uvicorn app.portal:portal --port 8001`. One note for
 reproducers: Google's frontend intercepts `/healthz` on `run.app` domains —
 use `/config`.
