@@ -201,6 +201,49 @@ its engineering SHA.
 
 ---
 
+## Fleet track mapping — the seven recommended GEAP components
+
+The Fortified Enterprise Fleet resources page recommends seven Gemini
+Enterprise Agent Platform components by name. Five are exercised in the
+submitted path; two are not used, and each of those has a principled answer,
+not an absence. Structure the description around this list — it is the
+checklist a Fleet judge will hold the submission against.
+
+**Exercised — 5 of 7:**
+
+| component | what makes it true |
+|---|---|
+| Agent Registry | two endpoints returned live by `agentregistry.googleapis.com`. The sharper claim: **registration is discovery, not authorization** — `harbor-cargo-ops` is registered and still denied, because per-endpoint IAP IAM authorizes, not the catalog |
+| Agent Runtime | a real Gemini 3.5 Flash **executes inside it** against the five-tool bounded surface — exercised, not merely provisioned. The track defines Runtime as "long-running async execution": the managed half is the actor executing in Runtime, the wall-clock half is the sentinel's revocation loop (README §3). The two halves are demonstrated separately and are honestly not yet combined in the cloud |
+| Agent Identity | `identityType: AGENT_IDENTITY`, no `serviceAccount` key, engine-bound `effectiveIdentity`; the 401→403→403 token-sharing enforcement legs |
+| Agent Gateway | `harbor-egress-gw`; ALLOWED and DENIED decisions captured from Google's own gateway logs |
+| Agent Observability | the track's gloss is "audit logs + reasoning-chain traces", and both exist from **two independent record-keepers**: Harbor's own attributed event trace (basis revisions, named refusal reasons, machine-checked integrity) and Google's — Cloud Trace spans naming `gemini-3.5-flash` and each of the five tools as its own `execute_tool` span, plus gateway decisions in Cloud Logging |
+
+**Not used — 2 of 7, with the stance stated:**
+
+- **Memory Bank.** Harbor's invariant is *session memory is not authoritative;
+  the store and the event log are.* Cross-session context that cannot be
+  re-verified is exactly what the membrane exists to distrust. Persistent
+  state is Firestore, one contract on both backends (`318 passed`, none
+  skipped).
+- **Model Armor.** Its purpose is guardrails against prompt injection and
+  tool poisoning. Harbor contains that threat class structurally: the
+  model-facing surface carries no verify / commit / revision-advance tool
+  (`assert_no_authority_tools` audits the outgoing request;
+  `tests/test_agents.py`), and inbound messages are evidence, not
+  instruction — a poisoned prompt can propose and a poisoned message can
+  inform, but neither can commit. **Do not claim this replaces Model Armor.**
+  Claim the threat it filters is architecturally contained, and point at the
+  test.
+
+The one-line component summary for the form: *five of the seven recommended
+GEAP components are exercised in the submitted path — Runtime by actual actor
+execution, not provisioning — and the two not used are answered by
+architecture: authoritative state instead of session memory, and structural
+authority containment instead of input filtering.*
+
+---
+
 ## Reproduce commands a judge will run
 
 All six need **no credentials and no Google Cloud account**. Measured on
