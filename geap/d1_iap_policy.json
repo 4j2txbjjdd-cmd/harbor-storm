@@ -1,0 +1,19 @@
+{
+  "name": "projects/harbor-storm-fleet/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+  "createTime": "2026-08-27T20:25:57.395088588Z",
+  "updateTime": "2026-08-27T20:27:37.794023347Z",
+  "target": {
+    "resources": [
+      "projects/801248256447/locations/us-central1/agentGateways/harbor-egress-gw"
+    ]
+  },
+  "action": "CUSTOM",
+  "customProvider": {
+    "authzExtension": {
+      "resources": [
+        "projects/801248256447/locations/us-central1/authzExtensions/harbor-iap-authz"
+      ]
+    }
+  },
+  "policyProfile": "REQUEST_AUTHZ"
+}

@@ -1,0 +1,87 @@
+{
+  "derived_identity_hint": {
+    "agent_engine_id": "2414533581910048768",
+    "expected_principal": "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2414533581910048768",
+    "kind": "derived-hint-not-evidence",
+    "authoritative_source": "GET .../reasoningEngines/{id} -> spec.effectiveIdentity"
+  },
+  "results": [
+    {
+      "label": "ALLOW: harbor-weather (registered, iap.egressor GRANTED, API key auth)",
+      "destination_reached": true,
+      "http_status": 200,
+      "outcome": "DESTINATION_REACHED",
+      "attempted_at": "2026-08-28T10:43:54+00:00",
+      "body_excerpt": "{\n  \"forecastHours\": [\n    {\n      \"interval\": {\n        \"startTime\": \"2026-08-28T10:00:00Z\",\n        \"endTime\": \"2026-08-28T11:00:00Z\"\n      },\n      \"displayDateTime\": {\n        \"year\": 2026,\n        \"month\": 8,\n        \"day\": 28,\n        \"hours\": 13,\n        \"minutes\": 0,\n        \"seconds\": 0,\n        \"nanos\": 0,\n        \"utcOffset\": \"10800s\"\n      },\n      \"weatherCondition\": {\n        \"iconBa",
+      "url": "https://weather.googleapis.com/v1/forecast/hours:lookup",
+      "headers": {
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff",
+        "server-timing": "gfet4t7; dur=90",
+        "x-xss-protection": "0",
+        "server": "ESF"
+      }
+    },
+    {
+      "label": "DENY: harbor-cargo-ops (registered, iap.egressor ABSENT)",
+      "attempted_at": "2026-08-28T10:43:54+00:00",
+      "headers": {
+        "x-goog-iap-generated-response": "true"
+      },
+      "url": "https://cloudresourcemanager.googleapis.com/v1/projects/harbor-storm-fleet",
+      "body_excerpt": "Egress request is not authorized.",
+      "destination_reached": false,
+      "http_status": 403,
+      "outcome": "GOVERNANCE_DENIED"
+    },
+    {
+      "http_status": 403,
+      "body_excerpt": "Egress request is not authorized. The endpoint is either incorrect or unregistered in the Agent Registry. Only registered endpoints are allowed.",
+      "outcome": "GOVERNANCE_DENIED",
+      "url": "https://bigquery.googleapis.com/bigquery/v2/projects/harbor-storm-fleet/datasets",
+      "headers": {
+        "x-goog-iap-generated-response": "true"
+      },
+      "destination_reached": false,
+      "label": "DENY: unregistered destination",
+      "attempted_at": "2026-08-28T10:43:54+00:00"
+    }
+  ],
+  "credential_kind": "Credentials",
+  "mtls_note": null,
+  "transport_environment": {
+    "env_keys": [
+      "AGENT_GATEWAY_ROOT_CERT_302034098528",
+      "GOOGLE_API_CERTIFICATE_CONFIG",
+      "GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES",
+      "GOOGLE_API_USE_CLIENT_CERTIFICATE",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ID",
+      "GOOGLE_CLOUD_AGENT_ENGINE_LOCATION",
+      "GOOGLE_CLOUD_AGENT_ENGINE_RUNTIME_REVISION_ID",
+      "SSL_CERT_FILE"
+    ],
+    "paths": {
+      "/var/run/secrets/workload-spiffe-credentials": [
+        "certificates.pem",
+        "trust_bundles.json",
+        "private_key.pem",
+        "credentials.json"
+      ],
+      "/var/run/gke-spiffe": "<FileNotFoundError>",
+      "/etc/ssl/agent": "<FileNotFoundError>"
+    },
+    "env_values": {
+      "GOOGLE_API_USE_CLIENT_CERTIFICATE": "true",
+      "GOOGLE_CLOUD_AGENT_ENGINE_RUNTIME_REVISION_ID": "1",
+      "GOOGLE_API_CERTIFICATE_CONFIG": "/var/run/secrets/workload-spiffe-credentials/credentials.json",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
+      "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
+      "GOOGLE_CLOUD_AGENT_ENGINE_LOCATION": "us-central1",
+      "AGENT_GATEWAY_ROOT_CERT_302034098528": "/etc/ssl/certs/ca-certificates.crt",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ID": "2414533581910048768"
+    }
+  },
+  "is_mtls": true,
+  "agent_engine_id": "2414533581910048768"
+}

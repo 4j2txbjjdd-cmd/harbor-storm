@@ -1,0 +1,31 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# secrets / local config
+.env
+.env.*
+!.env.example
+*-service-account.json
+*credentials*.json
+
+# build / run artifacts
+FOUNDATION_RUN.json
+dist/
+build/
+.DS_Store
+
+# firebase emulator noise
+firebase-debug.log
+firestore-debug.log
+*-debug.log
+.firebase/
+
+# GEAP evidence: engine/principal scratch pointers, not artifacts
+geap/ENGINE_*
+geap/PRINCIPAL_*

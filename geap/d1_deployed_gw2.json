@@ -1,0 +1,9 @@
+{
+  "name": "projects/801248256447/locations/us-central1/reasoningEngines/1492316005089673216",
+  "project": "harbor-storm-fleet",
+  "location": "us-central1",
+  "display_name": "harbor-window-agent-gw2",
+  "model": "gemini-3.5-flash",
+  "gateway": "projects/harbor-storm-fleet/locations/us-central1/agentGateways/harbor-egress-gw",
+  "effective_identity": "agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1492316005089673216"
+}

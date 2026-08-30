@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HarborWindow / StormSlot</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --line:#dfe3e8; --ink:#12161c; --muted:#5d6673;
+    --accent:#1a56db; --ok:#0f7b4f; --bad:#b3261e; --warn:#a4600a;
+    --ok-bg:#e6f4ec; --bad-bg:#fdeceb; --warn-bg:#fdf3e3; --calm:#e8edf4;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1216; --panel:#161b22; --line:#2b323c; --ink:#e6eaf0; --muted:#9aa5b4;
+      --accent:#6b9bff; --ok:#4ec98a; --bad:#ff7b72; --warn:#e3b341;
+      --ok-bg:#12281d; --bad-bg:#2d1514; --warn-bg:#2b2110; --calm:#1c232c;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{padding:20px 24px;border-bottom:1px solid var(--line);background:var(--panel);
+         display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+  h1{margin:0;font-size:19px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px}
+  .badges{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  .badge{font:12px/1 var(--mono);padding:5px 9px;border-radius:999px;
+         border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .badge.live{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+  .badge.seeded{color:var(--ok);border-color:var(--ok);background:var(--ok-bg)}
+  main{padding:20px 24px;display:grid;gap:20px;
+       grid-template-columns:repeat(auto-fit,minmax(430px,1fr));max-width:1500px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+          padding:18px;min-width:0}
+  h2{margin:0 0 2px;font-size:16px}
+  .desc{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  button{font:inherit;font-size:13px;padding:7px 13px;border-radius:7px;cursor:pointer;
+         border:1px solid var(--line);background:transparent;color:var(--ink)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .verdict{padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;
+           border:1px solid var(--line);color:var(--muted)}
+  .verdict.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+  .verdict.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+  .strip{display:flex;gap:3px;margin:0 0 6px}
+  .hr{flex:1;min-width:0;text-align:center;padding:9px 2px;border-radius:6px;
+      background:var(--calm);border:1px solid transparent;font:12px/1.35 var(--mono)}
+  .hr.severe{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+  .hr.transit{outline:2px solid var(--accent);outline-offset:-2px}
+  .hr small{display:block;font-size:10px;opacity:.75}
+  .legend{color:var(--muted);font-size:12px;margin:0 0 14px;display:flex;gap:14px;flex-wrap:wrap}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;
+          vertical-align:baseline}
+  ol.trace{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;
+           border:1px solid var(--line);border-radius:8px}
+  ol.trace li{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:7px 10px;
+              border-bottom:1px solid var(--line);font-size:12.5px}
+  ol.trace li:last-child{border-bottom:0}
+  .seq{color:var(--muted);font:12px/1.5 var(--mono);text-align:right}
+  .kind{font:12px/1.5 var(--mono);font-weight:600}
+  .k-PLAN_REJECTED .kind,.k-CLAIM_REFUSED .kind,.k-COMMIT_REFUSED .kind,
+  .k-NO_FEASIBLE_PLAN .kind{color:var(--bad)}
+  .k-PLAN_COMMITTED .kind,.k-PLAN_VERIFIED .kind{color:var(--ok)}
+  .k-COMMIT_REVOKED .kind,.k-REPLAN_STARTED .kind,.k-WEATHER_UPDATED .kind,
+  .k-MARINE_WEATHER_UPDATED .kind{color:var(--warn)}
+  .k-PLAN_REJECTED{background:var(--bad-bg)}
+  .k-PLAN_COMMITTED{background:var(--ok-bg)}
+  .k-COMMIT_REVOKED{background:var(--warn-bg)}
+  .who{color:var(--muted)}
+  .why{display:block;color:var(--muted);margin-top:2px}
+  .empty{color:var(--muted);font-size:13px;padding:24px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>HarborWindow / StormSlot</h1>
+    <div class="sub">One substrate, two scenarios. Authoritative state changes only after verification.</div>
+  </div>
+  <div class="badges" id="badges"></div>
+</header>
+<main id="main"></main>
+
+<script>
+const SCENARIOS = [
+  {id:"stormslot", title:"StormSlot",
+   desc:"Protect one container across port → truck → warehouse as a storm crosses the route.",
+   hours:[13,14,15,16,17,18], site:"PORT_A"},
+  {id:"harborwindow", title:"HarborWindow",
+   desc:"Protect one island cargo movement as marine weather windows shift.",
+   hours:[12,13,14,15,16,17], site:"HARBOR_A"},
+];
+const state = {};
+
+async function api(path, opts){
+  const r = await fetch(path, Object.assign({headers:{"Content-Type":"application/json"}}, opts||{}));
+  const body = await r.json().catch(()=>({error:"unreadable response"}));
+  if(!r.ok) throw new Error(body.detail || body.error || r.statusText);
+  return body;
+}
+
+function severeHours(trace){
+  for(let i=trace.length-1;i>=0;i--){
+    const p = trace[i].payload||{};
+    if(Array.isArray(p.severe_hours)) return p.severe_hours;
+  }
+  return [];
+}
+function unsafeHours(trace){
+  // HarborWindow reports refusals per hour rather than as a severe list.
+  const out = new Set();
+  for(const e of trace){
+    const m = /at hour (\d+)/.exec((e.payload||{}).reason||"");
+    if(m) out.add(Number(m[1]));
+  }
+  return [...out];
+}
+function departureOf(run){
+  const p = run.committed_plan;
+  if(!p) return null;
+  const m = p.metrics||{};
+  return m.departure_hour!=null ? Number(m.departure_hour) : null;
+}
+function transitSpan(run){
+  const d = departureOf(run);
+  if(d==null) return [];
+  const arr = Number((run.committed_plan.metrics||{}).arrival_hour ?? d);
+  const span=[]; for(let h=Math.floor(d);h<Math.ceil(arr);h++) span.push(h);
+  return span.length?span:[d];
+}
+
+function renderStrip(cfg, run){
+  const bad = new Set(run ? [...severeHours(run.trace), ...unsafeHours(run.trace)] : []);
+  const span = new Set(run ? transitSpan(run) : []);
+  const dep = run ? departureOf(run) : null;
+  const booked = run ? (run.facts.booked_pickup_hour ?? run.facts.booked_departure_hour) : null;
+  return `<div class="strip">${cfg.hours.map(h=>{
+    const cls = ["hr", bad.has(h)?"severe":"", span.has(h)?"transit":""].filter(Boolean).join(" ");
+    let mark = "&nbsp;";
+    if(h===dep && h===booked) mark = "kept";
+    else if(h===dep) mark = "moved&nbsp;here";
+    else if(h===booked) mark = "was&nbsp;booked";
+    return `<div class="${cls}">${h}:00<small>${mark}</small></div>`;
+  }).join("")}</div>
+  <p class="legend">
+    <span><span class="swatch" style="background:var(--bad)"></span>weather over limit</span>
+    <span><span class="swatch" style="background:transparent;outline:2px solid var(--accent)"></span>committed transit</span>
+  </p>`;
+}
+
+function renderVerdict(run){
+  if(!run) return `<div class="verdict">Not run yet.</div>`;
+  const rejected = run.rejected_plans||[];
+  if(!run.committed_plan_id){
+    return `<div class="verdict bad"><strong>No feasible plan.</strong> Every candidate was
+      refused: ${rejected.map(p=>escape_(p.rejection_reason)).join("; ")||"—"}</div>`;
+  }
+  const dep = departureOf(run);
+  const booked = run.facts.booked_pickup_hour ?? run.facts.booked_departure_hour;
+  const moved = dep!=null && booked!=null && dep!==booked;
+  const why = rejected.length ? escape_(rejected[0].rejection_reason) : null;
+  return `<div class="verdict ${moved?"ok":""}">
+    <strong>${escape_(run.committed_plan_id)}</strong> committed${dep!=null?` — departs ${dep}:00`:""}.
+    ${moved ? `Moved from the booked ${booked}:00 because the verifier refused it: ${why}.`
+            : `The booked ${booked}:00 slot survived verification unchanged.`}</div>`;
+}
+
+function escape_(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>(
+    {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function renderTrace(run){
+  if(!run) return `<div class="empty">Run the scenario to produce a trace.</div>`;
+  return `<ol class="trace">${run.trace.map(e=>{
+    const p = e.payload||{};
+    const why = p.reason || p.plan_id ||
+      (p.severe_hours?`severe hours ${JSON.stringify(p.severe_hours)}`:"") ||
+      (p.to_hour!=null?`${p.from_hour}:00 → ${p.to_hour}:00`:"") || p.work_id || "";
+    return `<li class="k-${escape_(e.kind)}">
+      <span class="seq">${e.seq}</span>
+      <span><span class="kind">${escape_(e.kind)}</span>
+        <span class="who">&nbsp;${escape_(e.actor)}</span>
+        ${why?`<span class="why">${escape_(why)}</span>`:""}</span></li>`;
+  }).join("")}</ol>`;
+}
+
+function render(){
+  document.getElementById("main").innerHTML = SCENARIOS.map(cfg=>{
+    const run = state[cfg.id];
+    return `<section>
+      <h2>${cfg.title}</h2>
+      <p class="desc">${cfg.desc}</p>
+      <div class="controls">
+        <button class="primary" data-act="run" data-s="${cfg.id}">Run</button>
+        <button data-act="disrupt" data-s="${cfg.id}" ${run&&run.committed_plan_id?"":"disabled"}>
+          Storm arrives early</button>
+        <button data-act="clear" data-s="${cfg.id}" ${run?"":"disabled"}>Clear</button>
+      </div>
+      ${renderVerdict(run)}
+      ${renderStrip(cfg, run)}
+      ${renderTrace(run)}
+    </section>`;
+  }).join("");
+}
+
+document.addEventListener("click", async ev=>{
+  const b = ev.target.closest("button[data-act]");
+  if(!b) return;
+  const id = b.dataset.s;
+  b.disabled = true;
+  try{
+    if(b.dataset.act==="run"){
+      state[id] = await api("/runs",{method:"POST",body:JSON.stringify({scenario:id})});
+    }else if(b.dataset.act==="disrupt"){
+      state[id] = await api(`/runs/${state[id].run_id}/disrupt`,
+                            {method:"POST",body:JSON.stringify({profile:"disrupted"})});
+    }else{ delete state[id]; }
+  }catch(err){
+    alert(`${id}: ${err.message}`);
+  }finally{ render(); }
+});
+
+(async function(){
+  try{
+    const c = await api("/config");
+    document.getElementById("badges").innerHTML = `
+      <span class="badge">state: ${escape_(c.state_backend)}</span>
+      <span class="badge ${c.weather_provider==="google"?"live":"seeded"}">weather: ${escape_(c.weather_provider)}</span>
+      <span class="badge ${c.deterministic_replay?"seeded":"live"}">${c.deterministic_replay?"deterministic replay":"live data"}</span>`;
+  }catch(e){
+    document.getElementById("badges").innerHTML = `<span class="badge live">config unreachable</span>`;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+[project]
+name = "harbor-storm-foundation"
+version = "0.1.0"
+description = "Shared competition substrate for HarborWindow and StormSlot"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

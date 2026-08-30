@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "body_excerpt": "{\n  \"error\": {\n    \"code\": 401,\n    \"message\": \"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\n    \"status\": \"UNAUTHENTICATED\"\n  }\n}\n",
+      "attempted_at": "2026-08-27T19:00:34+00:00",
+      "outcome": "DENIED",
+      "http_status": 401,
+      "label": "ALLOW-candidate: harbor-weather (registered, egressor granted)",
+      "url": "https://weather.googleapis.com/v1/forecast/hours:lookup?location.latitude=37.9420&location.longitude=23.6465&hours=1",
+      "headers": {
+        "x-frame-options": "SAMEORIGIN",
+        "server-timing": "gfet4t7; dur=3910",
+        "x-xss-protection": "0",
+        "server": "ESF",
+        "x-content-type-options": "nosniff",
+        "www-authenticate": "Bearer realm=\"https://accounts.google.com/\", error=\"invalid_token\""
+      }
+    },
+    {
+      "headers": {
+        "server": "ESF",
+        "x-xss-protection": "0",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "server-timing": "gfet4t7; dur=68"
+      },
+      "http_status": 200,
+      "url": "https://cloudresourcemanager.googleapis.com/v1/projects/harbor-storm-fleet",
+      "body_excerpt": "{\n  \"projectNumber\": \"801248256447\",\n  \"projectId\": \"harbor-storm-fleet\",\n  \"lifecycleState\": \"ACTIVE\",\n  \"name\": \"Harbor-storm-fleet\",\n  \"createTime\": \"2026-08-27T09:52:00.396Z\",\n  \"parent\": {\n    \"type\": \"organization\",\n    \"id\": \"648972411952\"\n  }\n}\n",
+      "attempted_at": "2026-08-27T19:00:38+00:00",
+      "outcome": "ALLOWED",
+      "label": "DENY-candidate: harbor-cargo-ops (registered, egressor NOT granted)"
+    },
+    {
+      "url": "https://bigquery.googleapis.com/bigquery/v2/projects/harbor-storm-fleet/datasets",
+      "label": "DENY-candidate: unregistered destination",
+      "outcome": "ALLOWED",
+      "headers": {
+        "x-xss-protection": "0",
+        "server": "ESF",
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff"
+      },
+      "body_excerpt": "{\n  \"kind\": \"bigquery#datasetList\",\n  \"etag\": \"1B2M2Y8AsgTpgAmY7PhCfg==\"\n}\n",
+      "attempted_at": "2026-08-27T19:00:38+00:00",
+      "http_status": 200
+    }
+  ],
+  "credential_kind": "Credentials",
+  "transport_environment": {
+    "env_keys": [
+      "AGENT_GATEWAY_ROOT_CERT_302034098528",
+      "GOOGLE_API_CERTIFICATE_CONFIG",
+      "GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ID",
+      "GOOGLE_CLOUD_AGENT_ENGINE_LOCATION",
+      "GOOGLE_CLOUD_AGENT_ENGINE_RUNTIME_REVISION_ID",
+      "SSL_CERT_FILE"
+    ],
+    "paths": {
+      "/var/run/gke-spiffe": "<FileNotFoundError>",
+      "/etc/ssl/agent": "<FileNotFoundError>",
+      "/var/run/secrets/workload-spiffe-credentials": [
+        "trust_bundles.json",
+        "certificates.pem",
+        "private_key.pem",
+        "credentials.json"
+      ]
+    },
+    "env_values": {
+      "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
+      "GOOGLE_CLOUD_AGENT_ENGINE_ID": "8409845032730755072",
+      "SSL_CERT_FILE": "",
+      "GOOGLE_CLOUD_AGENT_ENGINE_LOCATION": "us-central1",
+      "GOOGLE_API_CERTIFICATE_CONFIG": "/var/run/secrets/workload-spiffe-credentials/credentials.json",
+      "AGENT_GATEWAY_ROOT_CERT_302034098528": "",
+      "GOOGLE_CLOUD_AGENT_ENGINE_RUNTIME_REVISION_ID": "1"
+    }
+  }
+}

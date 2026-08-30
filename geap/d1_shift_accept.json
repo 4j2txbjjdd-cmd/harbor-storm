@@ -1,0 +1,163 @@
+{
+  "started_at": "2026-08-27T18:34:56+00:00",
+  "model_versions_reported": [
+    "gemini-3.5-flash"
+  ],
+  "authoritative_state": {
+    "revision": 0,
+    "committed_plan_id": "harbor-agent-plan-1",
+    "work_window_claimed_by": "window-agent"
+  },
+  "model_requested": "gemini-3.5-flash",
+  "plan_id": "harbor-agent-plan-1",
+  "harbor_actor_role": "window-agent",
+  "verifier_decision": "accepted",
+  "run_id": "geap-d1-shift-4",
+  "trace": [
+    {
+      "kind": "MARINE_WEATHER_MEASURED",
+      "seq": 1,
+      "actor": "weather-agent",
+      "payload": {
+        "severe_hours": [
+          12,
+          13,
+          16,
+          17
+        ]
+      }
+    },
+    {
+      "actor": "system",
+      "kind": "WORK_CREATED",
+      "seq": 2,
+      "payload": {}
+    },
+    {
+      "seq": 3,
+      "payload": {},
+      "actor": "system",
+      "kind": "WORK_CREATED"
+    },
+    {
+      "kind": "WORK_CREATED",
+      "seq": 4,
+      "payload": {},
+      "actor": "system"
+    },
+    {
+      "payload": {
+        "work_id": "load"
+      },
+      "seq": 5,
+      "kind": "CLAIMED",
+      "actor": "cargo-agent"
+    },
+    {
+      "actor": "harbormaster-agent",
+      "payload": {
+        "work_id": "slot"
+      },
+      "kind": "CLAIMED",
+      "seq": 6
+    },
+    {
+      "seq": 7,
+      "actor": "cargo-agent",
+      "kind": "CONSTRAINT_REPORTED",
+      "payload": {}
+    },
+    {
+      "kind": "CONSTRAINT_REPORTED",
+      "seq": 8,
+      "payload": {},
+      "actor": "harbormaster-agent"
+    },
+    {
+      "actor": "window-agent",
+      "kind": "CLAIMED",
+      "payload": {
+        "work_id": "window"
+      },
+      "seq": 9
+    },
+    {
+      "payload": {},
+      "seq": 10,
+      "actor": "window-agent",
+      "kind": "CONSTRAINT_REPORTED"
+    },
+    {
+      "seq": 11,
+      "payload": {
+        "plan_id": "harbor-agent-plan-1"
+      },
+      "actor": "window-agent",
+      "kind": "PLAN_PROPOSED"
+    },
+    {
+      "kind": "PLAN_VERIFIED",
+      "actor": "verifier",
+      "payload": {
+        "plan_id": "harbor-agent-plan-1",
+        "revision": 0
+      },
+      "seq": 12
+    },
+    {
+      "payload": {
+        "revision": 0,
+        "plan_id": "harbor-agent-plan-1"
+      },
+      "actor": "verifier",
+      "seq": 13,
+      "kind": "PLAN_COMMITTED"
+    }
+  ],
+  "google_runtime_identity": {
+    "env_reasoning_engine": "3244216260136796160",
+    "project": "ne21cbb00db953e63p-tp",
+    "numeric_project": "838220011567",
+    "email": "ne21cbb00db953e63p-tp@appspot.gserviceaccount.com",
+    "observed_at": "2026-08-27T18:34:56+00:00"
+  },
+  "verifier_actor": "verifier",
+  "tools_offered_to_model": [
+    "claim_work",
+    "read_facts",
+    "report_constraint",
+    "propose_plan",
+    "read_trace"
+  ],
+  "model_tool_calls": [
+    "claim_work",
+    "read_facts",
+    "read_trace",
+    "report_constraint",
+    "propose_plan",
+    "read_trace"
+  ],
+  "candidate_plan": {
+    "verified": true,
+    "actions": [
+      {
+        "type": "reserve_boat",
+        "departure_hour": 14
+      },
+      {
+        "kg": 320,
+        "type": "load_cargo"
+      },
+      {
+        "hour": 14,
+        "type": "depart"
+      }
+    ],
+    "id": "harbor-agent-plan-1",
+    "metrics": {},
+    "created_by": "window-agent",
+    "rejection_reason": null,
+    "basis_revision": 0
+  },
+  "model_turns": 7
+}

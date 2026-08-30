@@ -1,0 +1,42 @@
+[
+  {
+    "timestamp": "2026-08-27T19:29:09.615160943Z",
+    "methodName": "google.cloud.networkservices.v1beta1.DepService.CreateAuthzExtension",
+    "resourceName": "projects/harbor-storm-fleet/locations/us-central1/authzExtensions/harbor-iap-authz",
+    "principal": "<project-owner>",
+    "status": {
+      "code": 0,
+      "note": "success"
+    }
+  },
+  {
+    "timestamp": "2026-08-27T19:29:09.982256294Z",
+    "methodName": "google.cloud.networkservices.v1beta1.DepService.CreateAuthzExtension",
+    "resourceName": "projects/harbor-storm-fleet/locations/us-central1/authzExtensions/harbor-iap-authz",
+    "principal": "<project-owner>",
+    "status": {
+      "code": 0,
+      "note": "success"
+    }
+  },
+  {
+    "timestamp": "2026-08-28T09:42:30.694663546Z",
+    "methodName": "google.cloud.networkservices.v1beta1.DepService.UpdateAuthzExtension",
+    "resourceName": "projects/harbor-storm-fleet/locations/us-central1/authzExtensions/harbor-iap-authz",
+    "principal": "<project-owner>",
+    "status": {
+      "code": 0,
+      "note": "success"
+    }
+  },
+  {
+    "timestamp": "2026-08-28T09:44:13.111262455Z",
+    "methodName": "google.cloud.networkservices.v1beta1.DepService.UpdateAuthzExtension",
+    "resourceName": "projects/harbor-storm-fleet/locations/us-central1/authzExtensions/harbor-iap-authz",
+    "principal": "<project-owner>",
+    "status": {
+      "code": 0,
+      "note": "success"
+    }
+  }
+]

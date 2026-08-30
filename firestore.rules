@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// LOCAL EMULATOR ONLY. Do not deploy this file.
+//
+// The store contract tests drive Firestore through the Python server SDK,
+// which bypasses security rules entirely, so nothing here is exercised by
+// the suite. It exists because the emulator wants a rules file. Deny by
+// default so that if this is ever pointed at a real project by mistake, it
+// fails shut rather than opening the database.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

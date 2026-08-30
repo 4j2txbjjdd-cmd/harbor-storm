@@ -1,0 +1,5 @@
+{"targets":[
+ {"label":"ALLOW: harbor-weather (registered, iap.egressor GRANTED, API key auth)","url":"https://weather.googleapis.com/v1/forecast/hours:lookup?location.latitude=37.9420&location.longitude=23.6465&hours=1","auth":"key"},
+ {"label":"DENY: harbor-cargo-ops (registered, iap.egressor ABSENT)","url":"https://cloudresourcemanager.googleapis.com/v1/projects/harbor-storm-fleet","auth":"oauth"},
+ {"label":"DENY: unregistered destination","url":"https://bigquery.googleapis.com/bigquery/v2/projects/harbor-storm-fleet/datasets","auth":"oauth"}
+]}

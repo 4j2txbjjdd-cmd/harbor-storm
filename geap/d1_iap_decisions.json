@@ -1,0 +1,214 @@
+[
+  {
+    "insertId": "4i1bzie2w57k",
+    "labels": {
+      "iap.googleapis.com/audited_resource_name": "projects/801248256447/locations/global/endpoints/unregisteredEndpoint",
+      "iap.googleapis.com/audited_resource_type": "agentregistry.googleapis.com/Endpoint"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/cloudaudit.googleapis.com%2Fdata_access",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "authenticationInfo": {},
+      "authorizationInfo": [
+        {
+          "granted": false,
+          "permission": "iap.webServiceVersions.egressViaIAP",
+          "permissionType": "ADMIN_READ",
+          "resource": "projects/harbor-storm-fleet/locations/global/iap_web/agentRegistry/endpoints/unregisteredEndpoint",
+          "resourceAttributes": {
+            "service": "iap.googleapis.com",
+            "type": "iap.googleapis.com/WebServiceVersion"
+          }
+        }
+      ],
+      "methodName": "AuthorizeUser",
+      "request": {
+        "@type": "type.googleapis.com/cloud.security.gatekeeper.AuthorizeUserRequest",
+        "httpRequest": {
+          "url": "https://bigquery.googleapis.com/bigquery/v2/projects/harbor-storm-fleet/datasets"
+        },
+        "policy_version": "POLICY_VERSION_V1"
+      },
+      "requestMetadata": {
+        "destinationAttributes": {},
+        "requestAttributes": {}
+      },
+      "resourceName": "unregisteredEndpoint",
+      "serviceName": "iap.googleapis.com",
+      "status": {
+        "code": 7,
+        "message": "Permission Denied"
+      }
+    },
+    "receiveTimestamp": "2026-08-28T05:16:28.394862525Z",
+    "resource": {
+      "labels": {
+        "method": "AuthorizeUser",
+        "project_id": "harbor-storm-fleet",
+        "service": "iap.googleapis.com"
+      },
+      "type": "audited_resource"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-08-28T05:16:26.915691018Z"
+  },
+  {
+    "insertId": "zsokt6deay2",
+    "labels": {
+      "iap.googleapis.com/audited_resource_name": "projects/801248256447/locations/global/endpoints/unregisteredEndpoint",
+      "iap.googleapis.com/audited_resource_type": "agentregistry.googleapis.com/Endpoint"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/cloudaudit.googleapis.com%2Fdata_access",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "authenticationInfo": {},
+      "authorizationInfo": [
+        {
+          "granted": false,
+          "permission": "iap.webServiceVersions.egressViaIAP",
+          "permissionType": "ADMIN_READ",
+          "resource": "projects/harbor-storm-fleet/locations/global/iap_web/agentRegistry/endpoints/unregisteredEndpoint",
+          "resourceAttributes": {
+            "service": "iap.googleapis.com",
+            "type": "iap.googleapis.com/WebServiceVersion"
+          }
+        }
+      ],
+      "methodName": "AuthorizeUser",
+      "request": {
+        "@type": "type.googleapis.com/cloud.security.gatekeeper.AuthorizeUserRequest",
+        "httpRequest": {
+          "url": "https://iamcredentials.mtls.googleapis.com/v1/projects/-/serviceAccounts/ne21cbb00db953e63p-tp@appspot.gserviceaccount.com/allowedLocations"
+        },
+        "policy_version": "POLICY_VERSION_V1"
+      },
+      "requestMetadata": {
+        "destinationAttributes": {},
+        "requestAttributes": {}
+      },
+      "resourceName": "unregisteredEndpoint",
+      "serviceName": "iap.googleapis.com",
+      "status": {
+        "code": 7,
+        "message": "Permission Denied"
+      }
+    },
+    "receiveTimestamp": "2026-08-28T05:16:27.416992544Z",
+    "resource": {
+      "labels": {
+        "method": "AuthorizeUser",
+        "project_id": "harbor-storm-fleet",
+        "service": "iap.googleapis.com"
+      },
+      "type": "audited_resource"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-08-28T05:16:26.193613083Z"
+  },
+  {
+    "insertId": "x1nnj7e2l6vs",
+    "labels": {
+      "iap.googleapis.com/audited_resource_name": "projects/801248256447/locations/global/endpoints/unregisteredEndpoint",
+      "iap.googleapis.com/audited_resource_type": "agentregistry.googleapis.com/Endpoint"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/cloudaudit.googleapis.com%2Fdata_access",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "authenticationInfo": {},
+      "authorizationInfo": [
+        {
+          "granted": false,
+          "permission": "iap.webServiceVersions.egressViaIAP",
+          "permissionType": "ADMIN_READ",
+          "resource": "projects/harbor-storm-fleet/locations/global/iap_web/agentRegistry/endpoints/unregisteredEndpoint",
+          "resourceAttributes": {
+            "service": "iap.googleapis.com",
+            "type": "iap.googleapis.com/WebServiceVersion"
+          }
+        }
+      ],
+      "methodName": "AuthorizeUser",
+      "request": {
+        "@type": "type.googleapis.com/cloud.security.gatekeeper.AuthorizeUserRequest",
+        "httpRequest": {
+          "url": "https://bigquery.googleapis.com/bigquery/v2/projects/harbor-storm-fleet/datasets"
+        },
+        "policy_version": "POLICY_VERSION_V1"
+      },
+      "requestMetadata": {
+        "destinationAttributes": {},
+        "requestAttributes": {}
+      },
+      "resourceName": "unregisteredEndpoint",
+      "serviceName": "iap.googleapis.com",
+      "status": {
+        "code": 7,
+        "message": "Permission Denied"
+      }
+    },
+    "receiveTimestamp": "2026-08-28T05:13:46.305637811Z",
+    "resource": {
+      "labels": {
+        "method": "AuthorizeUser",
+        "project_id": "harbor-storm-fleet",
+        "service": "iap.googleapis.com"
+      },
+      "type": "audited_resource"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-08-28T05:13:45.311446926Z"
+  },
+  {
+    "insertId": "l3f83de3tdjs",
+    "labels": {
+      "iap.googleapis.com/audited_resource_name": "projects/801248256447/locations/global/endpoints/unregisteredEndpoint",
+      "iap.googleapis.com/audited_resource_type": "agentregistry.googleapis.com/Endpoint"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/cloudaudit.googleapis.com%2Fdata_access",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "authenticationInfo": {},
+      "authorizationInfo": [
+        {
+          "granted": false,
+          "permission": "iap.webServiceVersions.egressViaIAP",
+          "permissionType": "ADMIN_READ",
+          "resource": "projects/harbor-storm-fleet/locations/global/iap_web/agentRegistry/endpoints/unregisteredEndpoint",
+          "resourceAttributes": {
+            "service": "iap.googleapis.com",
+            "type": "iap.googleapis.com/WebServiceVersion"
+          }
+        }
+      ],
+      "methodName": "AuthorizeUser",
+      "request": {
+        "@type": "type.googleapis.com/cloud.security.gatekeeper.AuthorizeUserRequest",
+        "httpRequest": {
+          "url": "https://iamcredentials.mtls.googleapis.com/v1/projects/-/serviceAccounts/ne21cbb00db953e63p-tp@appspot.gserviceaccount.com/allowedLocations"
+        },
+        "policy_version": "POLICY_VERSION_V1"
+      },
+      "requestMetadata": {
+        "destinationAttributes": {},
+        "requestAttributes": {}
+      },
+      "resourceName": "unregisteredEndpoint",
+      "serviceName": "iap.googleapis.com",
+      "status": {
+        "code": 7,
+        "message": "Permission Denied"
+      }
+    },
+    "receiveTimestamp": "2026-08-28T05:13:44.483984399Z",
+    "resource": {
+      "labels": {
+        "method": "AuthorizeUser",
+        "project_id": "harbor-storm-fleet",
+        "service": "iap.googleapis.com"
+      },
+      "type": "audited_resource"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-08-28T05:13:44.249804660Z"
+  }
+]

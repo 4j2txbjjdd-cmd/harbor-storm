@@ -1,0 +1,90 @@
+{
+  "name": "projects/801248256447/locations/us-central1/reasoningEngines/1047585541886836736",
+  "displayName": "harbor-window-agent-gw",
+  "spec": {
+    "packageSpec": {
+      "pickleObjectGcsUri": "gs://harbor-storm-fleet-agent-staging/agent_engine/agent_engine.pkl",
+      "dependencyFilesGcsUri": "gs://harbor-storm-fleet-agent-staging/agent_engine/dependencies.tar.gz",
+      "requirementsGcsUri": "gs://harbor-storm-fleet-agent-staging/agent_engine/requirements.txt",
+      "pythonVersion": "3.12"
+    },
+    "classMethods": [
+      {
+        "name": "run_shift",
+        "parameters": {
+          "required": [
+            "run_id"
+          ],
+          "type": "object",
+          "properties": {}
+        },
+        "description": "One bounded shift: the model proposes, Harbor decides.\n\n        `stale_control` reproduces the #20 control inside the managed runtime:\n        real external truth lands between the proposal and verification, and\n        the candidate is refused for being bound to a world that has moved.\n        ",
+        "api_mode": ""
+      },
+      {
+        "name": "egress_probe",
+        "parameters": {
+          "required": [
+            "targets"
+          ],
+          "type": "object",
+          "properties": {}
+        },
+        "description": "Attempt an outbound call to each target from this runtime identity.\n\n        Not a tool. Never offered to the model, and nothing the model can do\n        reaches it -- the point of the probe is what the *infrastructure*\n        permits this identity to do, and a result the model could influence\n        would prove obedience rather than governance.\n\n        Every attempt is reported: status, a short body excerpt, and any\n        headers the gateway or IAP added. A refusal is a result, not an error.\n        ",
+        "api_mode": ""
+      },
+      {
+        "name": "whoami",
+        "parameters": {
+          "required": [],
+          "type": "object",
+          "properties": {}
+        },
+        "description": "What Google says this process is.\n\n        Read from the metadata server rather than from the deployment config:\n        the question is who Google decided this is, and configuration is what\n        we asked for.\n        ",
+        "api_mode": ""
+      }
+    ],
+    "deploymentSpec": {
+      "env": [
+        {
+          "name": "GOOGLE_GENAI_USE_VERTEXAI",
+          "value": "true"
+        },
+        {
+          "name": "STATE_BACKEND",
+          "value": "firestore"
+        },
+        {
+          "name": "FIRESTORE_DATABASE",
+          "value": "harbor"
+        },
+        {
+          "name": "GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES",
+          "value": "False"
+        },
+        {
+          "name": "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY",
+          "value": "true"
+        }
+      ],
+      "agentGatewayConfig": {
+        "agentToAnywhereConfig": {
+          "agentGateway": "projects/harbor-storm-fleet/locations/us-central1/agentGateways/harbor-egress-gw"
+        }
+      }
+    },
+    "agentFramework": "custom",
+    "identityType": "AGENT_IDENTITY",
+    "effectiveIdentity": "agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1047585541886836736"
+  },
+  "createTime": "2026-08-27T18:36:19.471365Z",
+  "updateTime": "2026-08-27T18:48:08.984466Z",
+  "contextSpec": {
+    "memoryBankConfig": {
+      "generationConfig": {}
+    }
+  },
+  "trafficConfig": {
+    "trafficSplitAlwaysLatest": {}
+  }
+}

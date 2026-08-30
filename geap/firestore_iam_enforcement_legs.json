@@ -1,0 +1,47 @@
+{
+  "captured_at": "2026-08-28T11:16:10+00:00",
+  "claim": "Agent Identity IAM enforcement remained live with GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=False. The 403 is the load-bearing leg: an unenforced identity yields 401 (no credential) or success, never a refusal of a named principal.",
+  "source": "Cloud Logging, resource.type=aiplatform.googleapis.com/ReasoningEngine, severity=ERROR",
+  "scope": "Three ERROR-severity legs: 401, 403, 403. This file contains NO success leg and cannot: the query filters on severity=ERROR. The successful run is evidenced separately in geap/d1_shift_accept.json (authoritative_state.committed_plan_id = harbor-agent-plan-1). Do not cite this file for a 401 -> 403 -> success sequence.",
+  "legs": [
+    {
+      "label": "401 UNAUTHENTICATED",
+      "engine": "2753323900753412096",
+      "meaning": "flag at platform default: the agent credential is not handed to google-cloud-firestore, so the library authenticates as nothing and no principal reaches Firestore",
+      "timestamp": "2026-08-27T17:59:45.362964Z",
+      "insertId": "6a907b11000589d43fb165e2",
+      "exception": "google.api_core.exceptions.Unauthenticated: 401 Request had invalid authentication credentials. Expected OAuth 2 access token, login cook",
+      "call_site": [
+        "File \"/code/app/geap/runtime_app.py\", line 186, in run_shift",
+        "File \"/code/app/core/firestore_store.py\", line 182, in __init__",
+        "response_iter = self._client._firestore_api.batch_get_documents("
+      ]
+    },
+    {
+      "label": "403 PERMISSION_DENIED",
+      "engine": "2248920742487916544",
+      "meaning": "flag=False: a principal now reaches Firestore and IAM REFUSES it. This is the load-bearing leg",
+      "timestamp": "2026-08-27T18:03:55.833246Z",
+      "insertId": "6a907c0b000cb6dead6f2c21",
+      "exception": "google.api_core.exceptions.PermissionDenied: 403 Missing or insufficient permissions.",
+      "call_site": [
+        "File \"/code/app/geap/runtime_app.py\", line 186, in run_shift",
+        "File \"/code/app/core/firestore_store.py\", line 182, in __init__"
+      ],
+      "call_site_note": "frames as they appear in this record, outermost first; the platform harness frame python_file_api_builder.py:366 above them is omitted"
+    },
+    {
+      "label": "403 PERMISSION_DENIED",
+      "engine": "3244216260136796160",
+      "meaning": "same engine family, before the datastore.user grant on this exact principal had propagated",
+      "timestamp": "2026-08-27T18:33:42.804050Z",
+      "insertId": "6a908306000c44d2ba9c5c07",
+      "exception": "google.api_core.exceptions.PermissionDenied: 403 Missing or insufficient permissions.",
+      "call_site": [
+        "File \"/code/app/geap/runtime_app.py\", line 218, in run_shift",
+        "File \"/code/app/core/firestore_store.py\", line 346, in create_work",
+        "File \"/code/app/core/firestore_store.py\", line 303, in refresh"
+      ]
+    }
+  ]
+}

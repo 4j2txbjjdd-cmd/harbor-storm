@@ -1,0 +1,38 @@
+{
+  "captured_at": "2026-08-28T11:13:16+00:00",
+  "resource": "projects/harbor-storm-fleet",
+  "etag_present": true,
+  "agent_identity_bindings": [
+    {
+      "role": "roles/aiplatform.agentDefaultAccess",
+      "members": [
+        "principalSet://agents.global.org-648972411952.system.id.goog/attribute.platformContainer/aiplatform/projects/801248256447"
+      ]
+    },
+    {
+      "role": "roles/aiplatform.user",
+      "members": [
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1047585541886836736",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1492316005089673216",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1830085977142460416",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2248920742487916544",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2753323900753412096",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/3244216260136796160",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/8409845032730755072"
+      ]
+    },
+    {
+      "role": "roles/datastore.user",
+      "members": [
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1047585541886836736",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1492316005089673216",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1830085977142460416",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2248920742487916544",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2753323900753412096",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/3244216260136796160",
+        "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/8409845032730755072"
+      ]
+    }
+  ],
+  "note": "filtered to principals under the agent-identity trust domain; no other members shown"
+}

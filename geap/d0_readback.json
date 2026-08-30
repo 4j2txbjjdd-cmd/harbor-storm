@@ -1,0 +1,18 @@
+{
+  "name": "projects/801248256447/locations/us-central1/reasoningEngines/1562121799313915904",
+  "displayName": "harbor-d0-identity-probe",
+  "spec": {
+    "identityType": "AGENT_IDENTITY",
+    "effectiveIdentity": "agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1562121799313915904"
+  },
+  "createTime": "2026-08-27T17:41:56.344885Z",
+  "updateTime": "2026-08-27T17:42:09.534030Z",
+  "contextSpec": {
+    "memoryBankConfig": {
+      "generationConfig": {}
+    }
+  },
+  "trafficConfig": {
+    "trafficSplitAlwaysLatest": {}
+  }
+}

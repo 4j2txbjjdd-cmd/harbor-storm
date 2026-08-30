@@ -1,0 +1,11 @@
+{
+  "name": "projects/harbor-storm-fleet/locations/us-central1/authzExtensions/harbor-iap-authz",
+  "createTime": "2026-08-27T19:29:09.593820661Z",
+  "updateTime": "2026-08-27T19:29:09.963185979Z",
+  "service": "iap.googleapis.com",
+  "timeout": "1s",
+  "failOpen": true,
+  "metadata": {
+    "iapPolicyVersion": "V1"
+  }
+}

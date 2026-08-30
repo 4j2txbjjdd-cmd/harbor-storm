@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-08-28T11:13:31+00:00",
+  "note": "IAP IAM on the two registered Agent Registry endpoints. Cargo is DELIBERATELY unbound; that absence is the deny control.",
+  "endpoints": {
+    "weather": {
+      "endpoint_id": "agentregistry-00000000-0000-0000-3e88-93525e6955a6",
+      "policy": {
+        "version": 1,
+        "etag": "BwZaFy2y8tk=",
+        "bindings": [
+          {
+            "role": "roles/iap.egressor",
+            "members": [
+              "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1047585541886836736",
+              "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/1492316005089673216",
+              "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/2414533581910048768",
+              "principal://agents.global.org-648972411952.system.id.goog/resources/aiplatform/projects/801248256447/locations/us-central1/reasoningEngines/4557684054584983552"
+            ]
+          }
+        ]
+      }
+    },
+    "cargo": {
+      "endpoint_id": "agentregistry-00000000-0000-0000-dffe-b2901c86a27a",
+      "policy": {
+        "etag": "ACAB"
+      }
+    }
+  }
+}
