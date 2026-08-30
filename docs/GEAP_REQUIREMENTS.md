@@ -39,7 +39,7 @@ not converged is in [`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md).
 | **Agent Runtime** | Harbor's bounded actor runs as a managed Reasoning Engine; a real Gemini 3.5 Flash completes a shift | `geap/d1_shift_accept.json` (**Engine A**, `3244216260136796160`, not gateway-bound) |
 | **Agent Identity** | `identityType: AGENT_IDENTITY`, **no** service account, engine-bound `effectiveIdentity` | `geap/d0_readback.json` |
 | **Agent Gateway** | governed egress on a gateway-bound engine; allow/deny decided by Google | `geap/gw_logs_rotated.json`, `geap/failclosed/http_triad_gateway.json` (**Engine B**, `2414533581910048768`, runs no actor) |
-| **Agent Registry** | two registered endpoints, one bound for egress and one deliberately unbound; registration is what separates *unregistered, refused outright* from *registered but not authorized* | `geap/iap_endpoint_policies.json` (both endpoint ids and their IAP IAM), and the registry endpoint named on each decision record in `geap/gw_logs_rotated.json` |
+| **Agent Registry** | two registered endpoints, one bound for egress and one deliberately unbound; registration is what separates *unregistered, refused outright* from *registered but not authorized* | `geap/iap_endpoint_policies.json` (both endpoint ids and their IAP IAM), and the registry endpoint named on the decision records for registered destinations in `geap/gw_logs_rotated.json` — the unregistered denial carries no registry attribution, which is itself the point |
 
 Registration is not an authorization allowlist. A registered endpoint is only
 reachable if per-endpoint IAP IAM also grants `roles/iap.egressor`: the cargo
@@ -75,7 +75,8 @@ Harbor does **not** claim these, and no artifact in this repository asserts them
   successful injection could *do*; it is not the same control as inline prompt-
   injection screening, and is not presented as one.
 - **Agent Observability as a Harbor-authored integration** — Cloud Trace does hold
-  spans from the submitted engines, but Agent Runtime emits them; Harbor wrote no
+  spans from the managed actor runs (Engine B runs no actor and emits none of
+  them), but Agent Runtime emits them; Harbor wrote no
   instrumentation and does not list OpenTelemetry as something it built with.
 
 Absence here is scope, not failure. Each line above states what *is* true in

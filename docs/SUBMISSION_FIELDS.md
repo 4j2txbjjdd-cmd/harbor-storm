@@ -43,7 +43,9 @@ decide it. The third is the reverse of what an earlier version of this section
 claimed, and the correction is recorded rather than quietly swapped:
 
 1. **No repo code touches it.** `grep` across `app/`, `geap/` and `tests/` for
-   `opentelemetry`, `otel`, `tracer` or `Span` returns nothing. There is no
+   `opentelemetry`, `otel` or `tracer` returns nothing; `Span` matches only
+   HTML `<span>` markup and a `transitSpan` helper in
+   `app/static/dashboard.html`, neither of which is tracing. There is no
    exporter, no provider, no manual span.
 2. **Google's own runtime logs say the instrumentation packages are absent.**
    From `resource.type="aiplatform.googleapis.com/ReasoningEngine"`, repeatedly:
@@ -53,7 +55,9 @@ claimed, and the correction is recorded rather than quietly swapped:
 3. **Cloud Trace is *not* empty.** This section previously said a
    `cloudtrace.googleapis.com` query returned **0 traces**. That was wrong and is
    falsifiable in one command. Over `2026-08-25` → `2026-08-29` the project holds
-   **2 traces and 23 spans**, all emitted by the submitted Agent Runtime engines:
+   **2 traces and 23 spans**, all actor-side, emitted by Agent Runtime — none of
+   them from the governed-egress engine `2414533581910048768`, which runs no
+   actor:
 
    ```
    7  call_llm                        2  invoke_workflow window_agent
@@ -157,7 +161,7 @@ log itself.
 | 6 **[B]** | Weather **allowed** | `geap/d1_egress_rotated.json` (200, real forecast, `server: ESF`) + `geap/gw_logs_rotated.json` (`authz=ALLOWED`) |
 | 7 **[B]** | Cargo **denied** | same pair — 403, `x-goog-iap-generated-response: true`, `authz=DENIED`; `geap/iap_endpoint_policies.json` shows the cargo endpoint has **no bindings at all** |
 | 8 **[B]** | Unregistered **denied** | same pair — 403 with `x-goog-iap-generated-response: true`, body *"Egress request is not authorized. The endpoint is either incorrect or unregistered in the Agent Registry. Only registered endpoints are allowed."*; the matching gateway record carries an empty `agentGatewayInfo` — no `agentRegistryResource` attribution |
-| 9 **[B]** | The gateway is the only variable | `geap/d1_egress_nogw2.json` — same probe on a **non**-gateway engine reaches both denied destinations. **Show rows 2–3 only**; row 1 is a 401 for an unrelated auth reason |
+| 9 | The gateway is the only variable | `geap/d1_egress_nogw2.json` — same probe on the **non**-gateway control engine `8409845032730755072` (neither A nor B) reaches both denied destinations. **Show rows 2–3 only**; row 1 is a 401 for an unrelated auth reason |
 | 10 | IAM names the agent principal, and that is what the runtime presents | `geap/iam_project_agent_principals.json` — both granted roles bound to per-engine `principal://` members. Read the artifact's own scope note before quoting it: it is **filtered to principals under the agent-identity trust domain**, so "and nothing else" is a claim about that filter, not about the whole project policy. Be exact on camera: within the filter, `roles/aiplatform.user` has those seven and nothing else, and `roles/datastore.user` the same seven; the unfiltered read (`gcloud projects get-iam-policy harbor-storm-fleet`) additionally shows `roles/datastore.user` carrying a pre-existing `…-compute@developer…` service account Harbor did not grant and does not authenticate as — so Firestore access is not exclusively Agent-Identity-bound. Neither Harbor-granted role carries a `principalSet` or a project-wide role; the file's single `principalSet://` sits on Google's default `roles/aiplatform.agentDefaultAccess`, which I did not create |
 | 11 | Identity enforcement survives token sharing | `geap/firestore_iam_enforcement_legs.json` — the **401 → 403 → 403** enforcement legs; **the 403 is the proof**. The success that follows is a different artifact, `geap/d1_shift_accept.json`; the legs file is a `severity=ERROR` query and holds no success leg |
 | 12 **[A]** | The verifier accepts and commits | `geap/d1_shift_accept.json` — `PLAN_PROPOSED window-agent` → `PLAN_VERIFIED verifier` → `PLAN_COMMITTED verifier`; `authoritative_state.committed_plan_id: harbor-agent-plan-1` |
@@ -221,8 +225,10 @@ before a judge asks.
 the cloud story work?"
 
 This repository publishes the frozen submitted tree as a single commit, so the
-answer is stated as fact rather than as a diff to run here. The submitted tree is
-engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`. Comparing `app` and
+answer is stated as fact rather than as a diff to run here. The submitted code
+and evidence are content-identical to engineering SHA
+`687eebfd26f64d87f3c8db49756f838dc90bc02a` (the judge-facing documents were
+finalized after that SHA). Comparing `app` and
 `tests` (modified, deleted or renamed files only):
 
 | against | files changed under `app` and `tests` |
@@ -253,8 +259,8 @@ reasoning is set out in [`../EVIDENCE.md`](../EVIDENCE.md).
 - **Two freeze tags, and the difference between them is stated.** Both are
   engineering-repository provenance, not objects in this single-commit
   publication: `core-freeze-1` (`cf91551`) is the historical operational freeze
-  and has not moved, and `submission-freeze-2` is what was submitted — the tree
-  published here, engineering SHA `687eebfd`. The delta between them is five
+  and has not moved, and `submission-freeze-2` is what was submitted — the code
+  and evidence published here, engineering SHA `687eebfd`. The delta between them is five
   files and is presentation only: `app.gate`'s printed footer and one docstring
   line, `GET /scenarios`'s `selected` value and note, the routes seam's two
   docstrings and its `NotImplementedError` message, and the test that pinned the

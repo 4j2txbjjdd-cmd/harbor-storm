@@ -110,13 +110,17 @@ An earlier version of this section claimed the governed allow/deny pair had been
 obtained on engines deployed **both ways** — one with the flag set, one without —
 and concluded that the governance claim held with certificate binding fully in
 force. That control does not exist. Both engines carry
-`GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES = "False"`, confirmed by
-control-plane GET on each:
+`GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES = "False"` — set by the
+same deploy script, `geap/d1_deploy_runtime.py`, and visible by name in each
+probe's transport environment with values withheld. The committed control-plane
+readback that shows the flag's value is for the earlier gateway-bound engine
+`1047585541886836736` (`geap/d1_gw_readback.json`); for these two engines the
+same GET is reproducible live, not committed:
 
 | engine | flag at probe time | weather (bound) | cargo (unbound) | evidence |
 |---|---|---|---|---|
-| `4557684054584983552` | set to `False` | 200, real forecast | 403 IAP-generated | `geap/d1_egress_final.json` |
-| `2414533581910048768` | set to `False` | 200, real forecast | 403 IAP-generated | `geap/d1_egress_rotated.json` |
+| `4557684054584983552` | `False` (deploy-set; capture shows the name, value withheld) | 200, real forecast | 403 IAP-generated | `geap/d1_egress_final.json` |
+| `2414533581910048768` | `False` (deploy-set; capture shows the name, value withheld) | 200, real forecast | 403 IAP-generated | `geap/d1_egress_rotated.json` |
 
 No governed arm was ever run with the flag unset, and none is claimed. What the
 two rows do show is reproducibility: same gateway, same registry state, same
@@ -181,8 +185,8 @@ Where it is set, with the reasoning, in `geap/d1_deploy_runtime.py`:
 | `geap/firestore_iam_enforcement_legs.json` | the 401 / 403 / 403 legs with timestamps, exceptions and call sites. **No success leg** — it is a `severity=ERROR` query |
 | `geap/iam_project_agent_principals.json` | the two granted roles bound per agent-identity principal. Filtered to that trust domain, per its own `note`: live `roles/datastore.user` also carries a pre-existing compute service account. No principalSet or project-wide role in either binding; the file's one `principalSet://` is Google's default `roles/aiplatform.agentDefaultAccess` |
 | `geap/iap_endpoint_policies.json` | weather endpoint carries `roles/iap.egressor`; **cargo endpoint has no bindings at all** |
-| `geap/d1_egress_final.json` | governed pair on `4557684054584983552`, flag set to `False` |
-| `geap/d1_egress_rotated.json` | governed pair on `2414533581910048768`, flag set to `False` — identical result on a rotated credential |
+| `geap/d1_egress_final.json` | governed pair on `4557684054584983552`; the flag appears by name in its transport environment, value withheld |
+| `geap/d1_egress_rotated.json` | governed pair on `2414533581910048768`; flag name present, value withheld — identical result on a rotated credential |
 
 ## The one-sentence answer
 

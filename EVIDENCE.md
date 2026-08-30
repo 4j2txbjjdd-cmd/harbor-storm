@@ -44,19 +44,20 @@ repository is a single-commit snapshot with no history in it to diff against.
 | claim | what it proves | primary artifact / doc | live or committed |
 |---|---|---|---|
 | Deterministic verifier | authoritative state moves only after a recomputation from authoritative facts; model-supplied metrics are ignored | `app/core/verify.py`; `tests/test_verification_membrane.py` | COMMITTED + LOCAL |
-| Stale-plan rejection | a *correct* plan is refused because the world moved | [`geap/d1_shift_control.json`](geap/d1_shift_control.json) → `candidate_plan.rejection_reason: "stale: plan bound to revision 0, world is at revision 1"`; `PLAN_REJECTED` at `seq 14` | COMMITTED |
-| No stale commit | the refusal actually held — nothing was written | same file → `authoritative_state.committed_plan_id: null`, and no `PLAN_VERIFIED` anywhere in the trace | COMMITTED |
+| Stale-plan rejection | a *correct* plan is refused because the world moved | [`geap/d1_shift_control.json`](geap/d1_shift_control.json) *(engine A)* → `candidate_plan.rejection_reason: "stale: plan bound to revision 0, world is at revision 1"`; `PLAN_REJECTED` at `seq 14` | COMMITTED |
+| No stale commit | the refusal actually held — nothing was written | same file *(engine A)* → `authoritative_state.committed_plan_id: null`, and no `PLAN_VERIFIED` anywhere in the trace | COMMITTED |
 | State revision / fencing | the revision fence and the mandatory fence are enforced by the store, not by convention | `tests/test_stale_plan.py`; `tests/test_fence_mandatory.py` | LOCAL |
 | Event idempotency | replayed events do not double-apply | `tests/test_event_idempotency.py` | LOCAL |
 | Replayable trace integrity | the event log is the record, and it is internally consistent | `tests/test_trace_integrity.py` | LOCAL |
-| Firestore is authoritative | the committed transition survives the process that made it — independent readback from a different machine | [`geap/d1_shift_accept.json`](geap/d1_shift_accept.json) → `authoritative_state.committed_plan_id: harbor-agent-plan-1`, run `geap-d1-shift-4` | COMMITTED + LIVE |
+| Firestore is authoritative | the committed transition survives the process that made it — independent readback from a different machine | [`geap/d1_shift_accept.json`](geap/d1_shift_accept.json) *(engine A)* → `authoritative_state.committed_plan_id: harbor-agent-plan-1`, run `geap-d1-shift-4` | COMMITTED + LIVE |
 
 ## Google control plane  ·  ENGINE B unless noted
 
 *How the egress rows are attributed: the gateway log records name the gateway and
 the registry endpoint, and **do not carry an engine id**. Their attribution to
 engine `2414533581910048768` comes from the controlled invocation and its time
-window together with the deploy record, not from anything in the log itself.*
+window together with the deploy record, not from anything in the log itself. `authz=ALLOWED` / `authz=DENIED` below is
+shorthand for the record's `jsonPayload.authzPolicyInfo.result` field.*
 
 | claim | what it proves | primary artifact / doc | live or committed |
 |---|---|---|---|
@@ -67,17 +68,17 @@ window together with the deploy record, not from anything in the log itself.*
 | Weather **allowed** | a registered destination with `roles/iap.egressor` returns a real forecast | [`geap/d1_egress_rotated.json`](geap/d1_egress_rotated.json) (200, `server: ESF`, no IAP header) + [`geap/gw_logs_rotated.json`](geap/gw_logs_rotated.json) (`authz=ALLOWED`) | COMMITTED |
 | Unauthorized destination **denied** | registered but with no `iap.egressor` binding → refused by IAP before the destination | same pair — `403`, `x-goog-iap-generated-response: true`, `authz=DENIED`; and in [`geap/iap_endpoint_policies.json`](geap/iap_endpoint_policies.json) the cargo endpoint's IAP IAM policy carries no bindings at all | COMMITTED |
 | Unregistered destination **denied** | not in the Agent Registry → refused, with no registry attribution in Google's log | same pair — *"…unregistered in the Agent Registry."* | COMMITTED |
-| The gateway is the only variable | the same probe on a **non**-gateway engine reaches both denied destinations freely | [`geap/d1_egress_nogw2.json`](geap/d1_egress_nogw2.json) — rows 2–3 `ALLOWED 200` | COMMITTED |
+| The gateway is the only variable | the same probe on a **non**-gateway engine (`8409845032730755072` — neither A nor B) reaches both denied destinations freely | [`geap/d1_egress_nogw2.json`](geap/d1_egress_nogw2.json) — rows 2–3 `ALLOWED 200` | COMMITTED |
 | `failOpen: false` | authorization is configured fail-closed. **A configuration property, not a demonstrated outage** | [`geap/failclosed/authz_extension_readback.json`](geap/failclosed/authz_extension_readback.json); [`docs/GATEWAY_FAIL_CLOSED.md`](docs/GATEWAY_FAIL_CLOSED.md) | COMMITTED + LIVE |
 | IAM names the agent principal | the granted roles are bound to per-engine `principal://` members | [`geap/iam_project_agent_principals.json`](geap/iam_project_agent_principals.json) | COMMITTED + LIVE |
-| Cloud Trace | Agent Runtime emits spans for the submitted engines — `generate_content gemini-3.5-flash` and one `execute_tool` span per bounded tool. **Google's instrumentation, not Harbor's**; OpenTelemetry is not claimed as a Harbor-authored integration | live `cloudtrace.googleapis.com`; [`docs/SUBMISSION_FIELDS.md`](docs/SUBMISSION_FIELDS.md) | LIVE |
+| Cloud Trace | Agent Runtime emits spans for the managed actor runs *(actor-side spans; engine B runs no actor and emits none of them)* — `generate_content gemini-3.5-flash` and one `execute_tool` span per bounded tool. **Google's instrumentation, not Harbor's**; OpenTelemetry is not claimed as a Harbor-authored integration | live `cloudtrace.googleapis.com`; [`docs/SUBMISSION_FIELDS.md`](docs/SUBMISSION_FIELDS.md) | LIVE |
 
 ## Provenance
 
 | claim | what it proves | primary artifact / doc | live or committed |
 |---|---|---|---|
 | The core was frozen before the managed work | the pre-GEAP operational core was frozen at engineering commit `cf91551` (`core-freeze-1`) before any Google managed-platform work began, so that layer had to be built *around* the verification core rather than by rewriting it — which is only checkable because the baseline is a fixed, named commit | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
-| The submitted tree | this tree is engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`. Its delta from the frozen core, across `app/` and `tests/`, is **five** files — `app/api.py`, `app/gate.py`, `app/config.py`, `app/providers/routes.py`, `tests/test_api.py` — and is presentation only: `app.gate --json` is byte-identical across the change and no verification logic differs. Everything else added since the freeze is additive (`app/geap/`, `tests/test_log_scrubber.py`) | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
+| The submitted tree | the code and evidence here are content-identical to engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`; the judge-facing prose (`README.md`, this file, `docs/`) and `.gitignore` were finalized after that SHA for this snapshot. The delta from the frozen core, across `app/` and `tests/`, is **five** files — `app/api.py`, `app/gate.py`, `app/config.py`, `app/providers/routes.py`, `tests/test_api.py` — and is presentation only: `app.gate --json` is byte-identical across the change and no verification logic differs. Everything else added since the freeze is additive (`app/geap/`, `tests/test_log_scrubber.py`) | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
 | Independent verification | a claim was not accepted on the strength of the run that produced it: evidence was re-collected from a detached checkout of a recorded SHA, against live cloud state, before the change it justified was accepted. The review history itself lives in the private engineering repository and is not part of this snapshot | see *Evidence is tied to fixed repository state*, below | STATED |
 | Cloud resource inventory | why each live engine exists and which evidence file it produced — the part no API can answer | [`docs/GEAP_CLOUD_INVENTORY.md`](docs/GEAP_CLOUD_INVENTORY.md) | COMMITTED |
 

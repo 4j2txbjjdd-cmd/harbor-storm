@@ -213,8 +213,10 @@ to be re-derived:
   `cf91551` (named `core-freeze-1`): fencing, claim-contention classification, the
   deterministic verifier, real Gemini 3.5 execution, live Google Weather in both
   scenarios, and deterministic replay.
-- **The tree submitted here is engineering SHA
-  `687eebfd26f64d87f3c8db49756f838dc90bc02a`.**
+- **Every file submitted here existed at engineering SHA
+  `687eebfd26f64d87f3c8db49756f838dc90bc02a` and is content-identical to it,
+  apart from the judge-facing prose (`README.md`, `EVIDENCE.md`, `docs/`) and
+  `.gitignore`, which were finalized after that SHA for this snapshot.**
 - **The delta between them, in `app/` and `tests/`, is five files and is
   presentation only:** `app/api.py`, `app/gate.py`, `app/config.py`,
   `app/providers/routes.py`, `tests/test_api.py` — docstrings, two judge-facing
@@ -245,7 +247,10 @@ coordination architecture is not specific to one workflow.
 
 The submitted managed path uses Google Agent Runtime, Agent Identity,
 Agent Gateway, Agent Registry, Gemini, Firestore, Google Weather,
-Identity-Aware Proxy, and Google Cloud IAM.
+Identity-Aware Proxy, and Google Cloud IAM. These surfaces are demonstrated as
+two proofs on two engines — the actor on one, governed egress on the other, as
+set out in [Reproduce it](#reproduce-it) — and no single engine demonstrates
+the combined path.
 
 Earlier exploration considered Cloud Run, Pub/Sub, Google Routes, and other
 extensions. They are not part of the submitted architecture.

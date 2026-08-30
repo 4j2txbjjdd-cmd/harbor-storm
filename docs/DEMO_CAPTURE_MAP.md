@@ -260,7 +260,9 @@ write if anything credential-shaped survives.
   so the record is presented as **stated fact**, not as a diff a judge is asked to run.
   Do not hand a judge a git command here; it cannot succeed in this tree.
 - **the record, as stated**
-  - the submitted tree is engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`
+  - the submitted code and evidence are content-identical to engineering SHA
+    `687eebfd26f64d87f3c8db49756f838dc90bc02a` (the judge-facing documents were
+    finalized after that SHA)
   - the pre-managed baseline, `core-freeze-1`, was `cf91551`
   - against that baseline the delta in `app/` and `tests/` is **five files** — `app/api.py`,
     `app/gate.py`, `app/config.py`, `app/providers/routes.py`, `tests/test_api.py` — and it

@@ -316,10 +316,12 @@ those two captures there is no project-wide `iap.egressor` grant, and neither
 `roles/datastore.user` nor `roles/aiplatform.user` contains a `principalSet`
 member. A `principalSet://` member *does* appear in the same capture, on
 `roles/aiplatform.agentDefaultAccess` across the platform container — so "no
-`principalSet`" as a blanket statement would be wrong. Both captures are
-filtered to principals under the agent-identity trust domain and say so, so
-neither is evidence about the project's other members, and neither is offered as
-a statement about basic project roles.
+`principalSet`" as a blanket statement would be wrong. The project-IAM capture
+is filtered to principals under the agent-identity trust domain and says so;
+the endpoint capture is the full IAP IAM readback of the two registry
+endpoints, scoped to those endpoints by construction. Neither is evidence
+about the project's other members, and neither is offered as a statement about
+basic project roles.
 
 ## Known limits of this evidence
 

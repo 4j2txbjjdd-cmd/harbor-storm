@@ -11,7 +11,7 @@ re-run.
 FREEZE_SHA      cf9155156f5cbfbc4e35cf8d9c356072abdd1fcc   ("cf91551")
 NAMED           core-freeze-1   (annotated tag in the engineering history)
 FROZEN          2026-08-27
-SUBMITTED TREE  687eebfd26f64d87f3c8db49756f838dc90bc02a
+SUBMITTED       687eebfd26f64d87f3c8db49756f838dc90bc02a   (code + evidence; docs finalized after)
 ```
 
 This is the operational core the GEAP migration builds on. Everything below was
