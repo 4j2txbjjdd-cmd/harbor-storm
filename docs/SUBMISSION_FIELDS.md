@@ -8,8 +8,12 @@ was dropped and the reason is recorded.*
 *Amended **2026-08-30**: the wall-clock sentinel (`app/sentinel.py`,
 `tests/test_sentinel.py`) was added as purely additive files, and the local
 Pub/Sub-push ingress demo was documented — see "Long-horizon operation" below
-and README §3. Test counts updated accordingly; cloud-state rows are unchanged
-and still dated 2026-08-28.*
+and README §3. Later the same day, **ReliefRun** was added — a third, additive
+instantiation of the substrate (`app/scenarios/reliefrun.py`,
+`app/relief_demo.py`, `tests/test_reliefrun.py`): a disaster-relief mission on
+a hazard-gated corridor, informed by the dynamics of the August 2026 Nepal
+floods, with fictional seeded data. Test counts updated accordingly;
+cloud-state rows are unchanged and still dated 2026-08-28.*
 
 ---
 
@@ -37,7 +41,7 @@ exercised in the path being submitted.
 | 15 | `Google Cloud Network Services` | `networkservices.googleapis.com` holds authzExtension `harbor-iap-authz` (`iapPolicyVersion: V1`, `timeout: 1s`) |
 | 16 | `Cloud Logging` | Google's own gateway decisions (`geap/gw_logs_rotated.json`) and the Firestore IAM enforcement legs (`geap/firestore_iam_enforcement_legs.json`) are read from Cloud Logging |
 | 17 | `GitHub` | `4j2txbjjdd-cmd/harbor-storm` — the repository this submitted tree is published from, and the one the reproduce commands below clone. Development history is kept in a separate private engineering repository; what is published here is the frozen submitted tree, not that history |
-| 18 | `pytest` | `pytest==9.1.1`; 271 passing tests |
+| 18 | `pytest` | `pytest==9.1.1`; 280 passing tests |
 
 ### Dropped after investigation
 
@@ -224,7 +228,7 @@ checklist a Fleet judge will hold the submission against.
 - **Memory Bank.** Harbor's invariant is *session memory is not authoritative;
   the store and the event log are.* Cross-session context that cannot be
   re-verified is exactly what the membrane exists to distrust. Persistent
-  state is Firestore, one contract on both backends (`318 passed`, none
+  state is Firestore, one contract on both backends (`327 passed`, none
   skipped).
 - **Model Armor.** Its purpose is guardrails against prompt injection and
   tool poisoning. Harbor contains that threat class structurally: the
@@ -246,8 +250,8 @@ authority containment instead of input filtering.*
 
 ## Reproduce commands a judge will run
 
-All six need **no credentials and no Google Cloud account**. Measured on
-2026-08-28 on the submitted tree; row 6 added 2026-08-30.
+All seven need **no credentials and no Google Cloud account**. Measured on
+2026-08-28 on the submitted tree; rows 6–7 added 2026-08-30.
 
 ```bash
 git clone https://github.com/4j2txbjjdd-cmd/harbor-storm.git
@@ -257,12 +261,13 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 | # | command | expected output |
 |---|---|---|
-| 1 | `.venv/bin/python -m pytest tests -q` | `271 passed, 47 skipped` (~1.2s) |
+| 1 | `.venv/bin/python -m pytest tests -q` | `280 passed, 47 skipped` (~1.2s) |
 | 2 | `.venv/bin/python -m pytest tests/test_live_gate.py -q` | `11 passed` |
 | 3 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES` and `harborwindow — 5/5 mechanical gates, SURVIVES` |
 | 4 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` |
 | 5 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` |
 | 6 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` |
+| 7 | `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace: mission refused at first light on a named hazard, committed at 9:00, revoked by the barrier-lake alert, re-committed at 12:00 — `COMMITTED -> relief-plan-3` |
 
 **Command 2 never touches the network, and that is the point of the test.** The
 live-gate tests run against controlled providers so that a green suite proves the
@@ -284,13 +289,13 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
 
 | # | command | measured |
 |---|---|---|
-| 7 | the emulator run above | `318 passed`, none skipped, 14.1s (measured 2026-08-30 with the sentinel suite; 2026-08-28 pre-sentinel: `305 passed`) |
+| 8 | the emulator run above | `327 passed`, none skipped, 14.2s (measured 2026-08-30 with the sentinel and ReliefRun suites; 2026-08-28 pre-sentinel: `305 passed`) |
 
 **The 47 skips are one cause, not 47 problems.** Every one is
 `tests/test_store_contract.py: set FIRESTORE_EMULATOR_HOST to run` — the same
 store contract run against the Firestore backend, which skips without an
-emulator. Under the emulator all 318 pass with nothing skipped, and that was
-actually run on the submitted tree rather than inferred from 271 + 47. Say this
+emulator. Under the emulator all 327 pass with nothing skipped, and that was
+actually run on the submitted tree rather than inferred from 280 + 47. Say this
 before a judge asks.
 
 **Frozen-core integrity**, the one that answers "did you rewrite the core to make

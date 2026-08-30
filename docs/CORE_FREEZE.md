@@ -203,10 +203,12 @@ KNOWN_FAILURES       none
 ```
 
 Those two test counts are the counts **at `cf91551`**, not the counts a judge
-will see today. The submitted tree reports 271 passed, 47 skipped in memory and
-318 passed, 0 skipped against the Firestore emulator; the difference is the
+will see today. The submitted tree reports 280 passed, 47 skipped in memory and
+327 passed, 0 skipped against the Firestore emulator; the difference is the
 additive work named above plus the wall-clock sentinel (`app/sentinel.py` with
-`tests/test_sentinel.py`, added 2026-08-30), not a change to anything frozen.
+`tests/test_sentinel.py`) and the ReliefRun instantiation
+(`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`),
+both added 2026-08-30, not a change to anything frozen.
 
 Negative controls, all at the same SHA:
 

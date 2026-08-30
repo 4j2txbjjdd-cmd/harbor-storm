@@ -33,7 +33,9 @@ the store refuses it.
 **HarborWindow is the flagship scenario. StormSlot is the transfer evidence** —
 the same substrate, same verifier, same fencing, same trace, moved to a container
 crossing port → truck → warehouse, to show the architecture is not specific to
-one workflow.
+one workflow. **ReliefRun is the third instantiation** — a disaster-relief
+mission on a hazard-gated corridor, added 2026-08-30 and described
+[below](#the-third-instantiation-reliefrun).
 
 - **Why this problem is real:** [`docs/WHY_HARBOR.md`](docs/WHY_HARBOR.md)
 - **Every claim, its evidence, and whether it is live or committed:** [`EVIDENCE.md`](EVIDENCE.md)
@@ -83,11 +85,12 @@ python3.12 -m venv .venv          # or any python >= 3.11
 
 | command | expected output | time |
 |---|---|---|
-| `.venv/bin/python -m pytest tests -q` | `271 passed, 47 skipped` | ~1.2s |
+| `.venv/bin/python -m pytest tests -q` | `280 passed, 47 skipped` | ~1.2s |
 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES`<br>`harborwindow — 5/5 mechanical gates, SURVIVES` | ~0.1s |
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` | ~0.1s |
+| `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace ending `COMMITTED -> relief-plan-3` — see [ReliefRun](#the-third-instantiation-reliefrun) | ~0.1s |
 
 **About the 47 skips.** All 47 are the same suite —
 `tests/test_store_contract.py`, which runs one store contract against both the
@@ -202,11 +205,11 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-Expected: `318 passed` with **none skipped** — the emulator turns the 47 skips
+Expected: `327 passed` with **none skipped** — the emulator turns the 47 skips
 above into passes. Measured on 2026-08-28 against the frozen tree
 (engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in
-14.3s; measured again on 2026-08-30 with the sentinel suite included:
-`318 passed` in 14.1s.
+14.3s; measured again on 2026-08-30 with the sentinel and ReliefRun suites
+included: `327 passed` in 14.2s.
 The same contract runs against both backends, so the in-memory store and
 Firestore cannot drift on the question that decides whether a write is
 authoritative.
@@ -274,7 +277,48 @@ from; why the two were not converged is in
 | `test_claim_contention.py` | losing a claim and failing to resolve one are different outcomes |
 | `test_live_gate.py` | the seeded lane cannot reach the network |
 | `test_sentinel.py` | commitment does not end scrutiny: a changed observation revokes and replans through the verifier, applies at most once across restarts, and the sentinel itself holds no authority |
+| `test_reliefrun.py` | the third instantiation passes the same membrane assertions: calm-forecast negative control, named-reason refusals, verify-before-commit, post-commit revocation, deterministic replay, disjoint actor scopes |
 | `test_log_scrubber.py` | evidence capture redacts credentials before writing, and fails closed |
+
+## The third instantiation: ReliefRun
+
+Added 2026-08-30, informed by the dynamics of the August 2026 Nepal floods: a
+glacier collapse and landslide sent a surge down a border valley, destroyed
+the road corridor, and left an upstream barrier lake whose breach risk could
+invalidate any rescue mission planned after the first flood. The failure mode
+that matters is exactly the one this substrate exists to refuse — **a mission
+can be correct when planned and wrong at dispatch, because the mountain moved
+in between.**
+
+The scenario's data is seeded and fictional (`CORRIDOR_A`, `VILLAGE_X`); it
+demonstrates the mechanism class, not the event, out of respect for an
+operation that is still under way. One relief mission on a hazard-gated
+corridor: `hazard-agent` owns the corridor windows and operating limits,
+`logistics-agent` owns payload against vehicle capacity, `ops-agent` owns
+convoy windows, hospital beds, the extraction count and the access cutoff.
+Three disjoint scopes, atomic claims — two teams cannot allocate the same
+vehicle — and one deterministic verifier that recomputes the whole transit
+from authoritative facts.
+
+```bash
+.venv/bin/python -m app.relief_demo --disrupt --pretty
+```
+
+The mission booked at first light is refused on a named reason (*corridor
+water hazard 24 mm over limit at hour 6*), replans into the 9:00 window and
+commits. Then the barrier-lake alert lands: the committed mission is revoked
+by the verifier (*water hazard 26 mm over limit at hour 9*), claims are
+reaffirmed, and the fleet re-commits into the 12:00 window. The calm-forecast
+negative control is in `tests/test_reliefrun.py`: under a benign forecast the
+first-light departure survives untouched. The sentinel watches this scenario
+too, so the same story runs across wall-clock ticks.
+
+ReliefRun is additive: `app.demo`, `app.gate`, the config surface and the API
+are byte-identical to the frozen tree, and the scenario is deliberately not
+part of the two-scenario decision gate. It exists to show the mapping is
+direct — sailing slots become convoy windows, cargo capacity becomes payload
+and hospital beds, marine weather becomes corridor hazard — and nothing in
+the membrane had to change to carry it.
 
 ## Frozen core
 
@@ -289,9 +333,12 @@ provenance below is stated as fact rather than left to be re-derived:
 - **Every file submitted here existed at engineering SHA
   `687eebfd26f64d87f3c8db49756f838dc90bc02a` and is content-identical to it,
   apart from the judge-facing prose (`README.md`, `EVIDENCE.md`, `docs/`) and
-  `.gitignore`, which were finalized after that SHA for this snapshot, and the
+  `.gitignore`, which were finalized after that SHA for this snapshot; the
   sentinel (`app/sentinel.py`, `tests/test_sentinel.py`), added later at
-  engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`.**
+  engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`; and ReliefRun
+  (`app/scenarios/reliefrun.py`, `app/relief_demo.py`,
+  `tests/test_reliefrun.py`, plus the sentinel gaining it as a watchable
+  scenario), added at engineering SHA `893f759`.**
 - **The delta between them, in `app/` and `tests/`, is five files and is
   presentation only:** `app/api.py`, `app/gate.py`, `app/config.py`,
   `app/providers/routes.py`, `tests/test_api.py` — docstrings, two judge-facing
@@ -300,10 +347,12 @@ provenance below is stated as fact rather than left to be re-derived:
   byte-identical across that change and no verification logic differs.
 - **Everything else added after the core freeze is additive**, not a rewrite of
   frozen code: the managed-runtime adapter `app/geap/` with
-  `tests/test_log_scrubber.py`, and the wall-clock re-observation harness
-  `app/sentinel.py` with `tests/test_sentinel.py`. No frozen file was modified
-  to make the managed Google layer or the sentinel work — the sentinel drives
-  the frozen `disrupt()` path and holds no authority of its own.
+  `tests/test_log_scrubber.py`, the wall-clock re-observation harness
+  `app/sentinel.py` with `tests/test_sentinel.py`, and the ReliefRun
+  instantiation with `tests/test_reliefrun.py`. No frozen file was modified to
+  make any of them work — the sentinel drives the frozen `disrupt()` path and
+  holds no authority of its own, and ReliefRun reuses the frozen membrane
+  without being wired into `app.demo`, `app.gate` or the API.
 
 The delta is declared instead of absorbed because that is the honest form: editing
 those strings and then claiming the original freeze had never moved would have been

@@ -30,12 +30,18 @@ from app.config import SCENARIOS, ConfigError, Settings, build_state, \
 from app.core.store import Store
 from app.providers.routes import RouteProvider
 from app.providers.weather import WeatherProvider
-from app.scenarios import stormslot, harborwindow
+from app.scenarios import stormslot, harborwindow, reliefrun
+
+# The sentinel also carries the additive ReliefRun scenario; the CLI below
+# stays scoped to the two config-wired scenarios.
+WATCHABLE = SCENARIOS + ("reliefrun",)
 
 
 def _forecast_locations(scenario: str, facts: dict) -> List[str]:
     if scenario == "stormslot":
         return [facts["port"]]
+    if scenario == "reliefrun":
+        return [facts["corridor"], facts["village"]]
     return [facts["harbor"], facts["island"]]
 
 
@@ -67,7 +73,7 @@ class Sentinel:
     def __init__(self, store: Store, weather: WeatherProvider, scenario: str,
                  routes: Optional[RouteProvider] = None,
                  baseline_fingerprint: Optional[str] = None):
-        if scenario not in SCENARIOS:
+        if scenario not in WATCHABLE:
             raise ValueError(f"unknown scenario {scenario!r}")
         if scenario == "stormslot" and routes is None:
             raise ValueError("stormslot requires a route provider")
@@ -82,6 +88,8 @@ class Sentinel:
         if self.scenario == "stormslot":
             stormslot.disrupt(self.store, self.weather, self.routes,
                               event_id=event_id)
+        elif self.scenario == "reliefrun":
+            reliefrun.disrupt(self.store, self.weather, event_id=event_id)
         else:
             harborwindow.disrupt(self.store, self.weather, event_id=event_id)
 
