@@ -113,6 +113,21 @@ different actors on the record because they are different actors in fact.
 
 Both scenarios are byte-identical across runs — same seed, same trace.
 
+**Or watch it in a browser.** The same seeded membrane has a small dashboard —
+still offline, still no credentials:
+
+```bash
+.venv/bin/python -m uvicorn app.api:app --port 8000
+```
+
+Open <http://127.0.0.1:8000/>, pick a scenario, press **Run**, then
+**Storm arrives early**. The booked hour turns red, the verifier's refusal is
+quoted on screen — *harbor wind 42 kph over limit at hour 12* — and the
+committed plan moves the departure, with the full numbered event trace
+underneath. The header badges state exactly which backends are in play
+(`state: memory`, `weather: mock`, `deterministic replay`), so what you are
+watching is the reference path, not a staged recording.
+
 ### 3. Determinism check
 
 The seeded lane must not depend on the network. This is asserted mechanically,
