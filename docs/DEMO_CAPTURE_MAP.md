@@ -13,6 +13,11 @@ artifact a shot points at is present in this repository, except where a shot say
 in so many words that it is not. No engine, binding or run referenced by any shot
 has disappeared.
 
+**Addendum (2026-08-30).** The wall-clock sentinel (`app/sentinel.py` with
+`tests/test_sentinel.py`, additive) was added after that recheck. The seeded
+suite now returns `271 passed, 47 skipped` and the emulator suite `318 passed`
+with none skipped; every dated figure above is the pre-sentinel measurement.
+
 ## Read this first
 
 **Two lanes, and do not mix them.**
@@ -243,9 +248,9 @@ write if anything credential-shaped survives.
 - **secret** none · **RECHECK** no
 
 ## 16b. Test suite
-- **claim** 258 passing, and the 47 skips are one deliberate cause.
+- **claim** 271 passing, and the 47 skips are one deliberate cause.
 - **action** `.venv/bin/python -m pytest tests -q`
-- **visible** `258 passed, 47 skipped`
+- **visible** `271 passed, 47 skipped` (`258` before the sentinel was added 2026-08-30)
 - **duration** **1.18s cold / ~0.98s warm** (measured) · **lane** SAFE LIVE
 - **have ready** all 47 skips are `tests/test_store_contract.py: set FIRESTORE_EMULATOR_HOST to run` — the Firestore contract suite, skipped by design without an emulator. Say it before a judge asks.
 - **secret** none · **RECHECK** ✅ confirmed 2026-08-28 — `258 passed, 47 skipped`, and all 47

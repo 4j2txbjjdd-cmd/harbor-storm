@@ -5,6 +5,12 @@ against the tree and against live cloud state on **2026-08-28**. Nothing here is
 aspirational: if a technology could not be shown to run in the submitted path, it
 was dropped and the reason is recorded.*
 
+*Amended **2026-08-30**: the wall-clock sentinel (`app/sentinel.py`,
+`tests/test_sentinel.py`) was added as purely additive files, and the local
+Pub/Sub-push ingress demo was documented — see "Long-horizon operation" below
+and README §3. Test counts updated accordingly; cloud-state rows are unchanged
+and still dated 2026-08-28.*
+
 ---
 
 ## Built With — 18 tags
@@ -31,7 +37,7 @@ exercised in the path being submitted.
 | 15 | `Google Cloud Network Services` | `networkservices.googleapis.com` holds authzExtension `harbor-iap-authz` (`iapPolicyVersion: V1`, `timeout: 1s`) |
 | 16 | `Cloud Logging` | Google's own gateway decisions (`geap/gw_logs_rotated.json`) and the Firestore IAM enforcement legs (`geap/firestore_iam_enforcement_legs.json`) are read from Cloud Logging |
 | 17 | `GitHub` | `4j2txbjjdd-cmd/harbor-storm` — the repository this submitted tree is published from, and the one the reproduce commands below clone. Development history is kept in a separate private engineering repository; what is published here is the frozen submitted tree, not that history |
-| 18 | `pytest` | `pytest==9.1.1`; 258 passing tests |
+| 18 | `pytest` | `pytest==9.1.1`; 271 passing tests |
 
 ### Dropped after investigation
 
@@ -108,8 +114,11 @@ the project. Enabled is not exercised.
 - **Conceptual tags** — *Zero Trust*, *Multi-Agent Systems*, *Enterprise AI*.
   These describe the idea, not the build. They belong in the story text.
 - **Cloud Pub/Sub** — `google-cloud-pubsub` is in `requirements.txt` and
-  `deploy/pubsub.sh` exists, but it belongs to the same undeployed Cloud Run
-  path. Same rule as Artifact Registry.
+  `deploy/pubsub.sh` exists, but the managed service belongs to the same
+  undeployed Cloud Run path. Same rule as Artifact Registry. The *push
+  endpoint* (`POST /pubsub/push`) is exercised — locally, with curl-delivered
+  envelopes, including messageId deduplication (README §3) — but no real
+  Pub/Sub subscription delivers to it, so the tag stays off.
 
 ---
 
@@ -173,10 +182,29 @@ log itself.
 
 ---
 
+## Long-horizon operation (added 2026-08-30)
+
+Not one of the 17 claims above — a separate, additive claim with its own
+evidence: **commitment does not end scrutiny, across wall-clock time.** The
+revocation semantics (`COMMIT_REVOKED`, revision fencing, event dedup) are in
+the frozen core; `app/sentinel.py` carries them onto a real clock by polling
+the forecast and routing a changed observation into the frozen `disrupt()`
+path, and `POST /pubsub/push` is the same path pushed instead of polled —
+at-least-once delivery handled by messageId deduplication, duplicate acks,
+and 400-to-dead-letter for poison messages. Evidence:
+`tests/test_sentinel.py` (13 tests: unchanged forecast is a pure no-op, a
+changed one revokes and replans through the verifier, an observation applies
+at most once across restarts, the sentinel holds no authority), plus the
+runnable sentinel and curl sequences in README §3. The sentinel is additive —
+no frozen file moved — and is declared in the README's provenance section at
+its engineering SHA.
+
+---
+
 ## Reproduce commands a judge will run
 
-All five need **no credentials and no Google Cloud account**. Measured on
-2026-08-28 on the submitted tree.
+All six need **no credentials and no Google Cloud account**. Measured on
+2026-08-28 on the submitted tree; row 6 added 2026-08-30.
 
 ```bash
 git clone https://github.com/4j2txbjjdd-cmd/harbor-storm.git
@@ -186,11 +214,12 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 | # | command | expected output |
 |---|---|---|
-| 1 | `.venv/bin/python -m pytest tests -q` | `258 passed, 47 skipped` (~1.2s) |
+| 1 | `.venv/bin/python -m pytest tests -q` | `271 passed, 47 skipped` (~1.2s) |
 | 2 | `.venv/bin/python -m pytest tests/test_live_gate.py -q` | `11 passed` |
 | 3 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES` and `harborwindow — 5/5 mechanical gates, SURVIVES` |
 | 4 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` |
 | 5 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` |
+| 6 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` |
 
 **Command 2 never touches the network, and that is the point of the test.** The
 live-gate tests run against controlled providers so that a green suite proves the
@@ -210,26 +239,29 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-| # | command | measured 2026-08-28 |
+| # | command | measured |
 |---|---|---|
-| 6 | the emulator run above | `305 passed`, none skipped, 14.3s |
+| 7 | the emulator run above | `318 passed`, none skipped, 14.1s (measured 2026-08-30 with the sentinel suite; 2026-08-28 pre-sentinel: `305 passed`) |
 
 **The 47 skips are one cause, not 47 problems.** Every one is
 `tests/test_store_contract.py: set FIRESTORE_EMULATOR_HOST to run` — the same
 store contract run against the Firestore backend, which skips without an
-emulator. Under the emulator all 305 pass with nothing skipped, and that was
-actually run on the submitted tree rather than inferred from 258 + 47. Say this
+emulator. Under the emulator all 318 pass with nothing skipped, and that was
+actually run on the submitted tree rather than inferred from 271 + 47. Say this
 before a judge asks.
 
 **Frozen-core integrity**, the one that answers "did you rewrite the core to make
 the cloud story work?"
 
-This repository publishes the frozen submitted tree as a single commit, so the
-answer is stated as fact rather than as a diff to run here. The submitted code
-and evidence are content-identical to engineering SHA
+This repository publishes the frozen submitted tree without its engineering
+history, so the answer is stated as fact rather than as a diff to run here.
+The submitted code and evidence are content-identical to engineering SHA
 `687eebfd26f64d87f3c8db49756f838dc90bc02a` (the judge-facing documents were
-finalized after that SHA). Comparing `app` and
-`tests` (modified, deleted or renamed files only):
+finalized after that SHA, and the sentinel — `app/sentinel.py`,
+`tests/test_sentinel.py` — was added later as purely additive files at
+engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`). Comparing `app`
+and `tests` (modified, deleted or renamed files only — the two added sentinel
+files are declared above, not hidden by this filter):
 
 | against | files changed under `app` and `tests` |
 |---|---|

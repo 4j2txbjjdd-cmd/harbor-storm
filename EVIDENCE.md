@@ -106,10 +106,12 @@ number gets quoted.
 ## Reproduce the local half in about a minute
 
 ```bash
-.venv/bin/python -m pytest tests -q                    # 258 passed, 47 skipped
+.venv/bin/python -m pytest tests -q                    # 271 passed, 47 skipped
 .venv/bin/python -m app.gate                           # both scenarios 5/5, SURVIVES
 .venv/bin/python -m app.demo harborwindow --pretty     # 16-line trace, COMMITTED -> harbor-plan-2
 .venv/bin/python -m app.demo stormslot --pretty        # 16-line trace, COMMITTED -> stormslot-plan-2
+.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2
+                                                       # wall-clock ticks: COMMIT_REVOKED -> replan -> harbor-plan-3
 ```
 
 Full instructions, including the Firestore emulator run that turns the 47 skips

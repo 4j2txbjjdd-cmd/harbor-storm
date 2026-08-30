@@ -83,15 +83,16 @@ python3.12 -m venv .venv          # or any python >= 3.11
 
 | command | expected output | time |
 |---|---|---|
-| `.venv/bin/python -m pytest tests -q` | `258 passed, 47 skipped` | ~1.2s |
+| `.venv/bin/python -m pytest tests -q` | `271 passed, 47 skipped` | ~1.2s |
 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES`<br>`harborwindow — 5/5 mechanical gates, SURVIVES` | ~0.1s |
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
+| `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` | ~0.1s |
 
 **About the 47 skips.** All 47 are the same suite —
 `tests/test_store_contract.py`, which runs one store contract against both the
 in-memory and Firestore backends. Without a Firestore emulator the Firestore half
-skips by design. Run them with the emulator (section 4) and the skips become passes.
+skips by design. Run them with the emulator (section 5) and the skips become passes.
 
 **What to look for in the demo output.** The trace is the point, not the final
 line. `app.demo harborwindow --pretty` shows the whole membrane in 16 events:
@@ -128,7 +129,61 @@ underneath. The header badges state exactly which backends are in play
 (`state: memory`, `weather: mock`, `deterministic replay`), so what you are
 watching is the reference path, not a staged recording.
 
-### 3. Determinism check
+### 3. Long-horizon operation — the sentinel
+
+Commitment does not end scrutiny. The revocation semantics are in the frozen
+core — a committed plan whose world moves is revoked by the verifier on a
+named physical reason (`COMMIT_REVOKED`) and the fleet replans — and the
+sentinel carries them across wall-clock time. It polls the forecast on an
+interval; when the observation changes it hands the new truth to the same
+disruption path the seeded demos use. It emits nothing, mutates nothing, and
+holds no verify or commit tool: every authoritative consequence of a tick is
+the verifier's, because it is the same code path.
+
+```bash
+.venv/bin/python -m app.sentinel harborwindow --interval 60
+```
+
+seeds a run, commits a plan, and then watches. On the seeded lane
+`--disrupt-at-tick N` stages the forecast change for a deterministic demo; on
+the live lane (`WEATHER_PROVIDER=google`) that flag is refused, because there
+the real forecast is the disruption. Observations are content-addressed — the
+disruption event id is derived from the forecast itself — so a repeated or
+crash-replayed observation applies at most once, landing on the trace as
+`DUPLICATE_EVENT_IGNORED` and moving nothing.
+
+With `STATE_BACKEND=firestore` the run is durable: kill the sentinel,
+restart it with `--run-id <the-run>`, and it re-observes and reconciles on
+the first tick — it cannot know what moved while nothing was watching, so it
+asks the world rather than trusting its memory. `tests/test_sentinel.py`
+holds all of this to contract.
+
+**Event-driven ingress, same membrane.** The API also carries a Pub/Sub push
+endpoint — the shape a production subscription would deliver to — and it
+treats a disruption as evidence, never as an instruction: the message supplies
+facts, and the verifier still decides. With the dashboard server from step 2
+running:
+
+```bash
+RUN=$(curl -s -X POST localhost:8000/runs -H 'content-type: application/json' \
+  -d '{"scenario":"harborwindow"}' | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')
+DATA=$(printf '{"run_id":"%s"}' "$RUN" | base64)
+curl -s -X POST localhost:8000/pubsub/push -H 'content-type: application/json' \
+  -d "{\"message\":{\"data\":\"$DATA\",\"messageId\":\"m-001\"},\"subscription\":\"local\"}"
+```
+
+Expected: `"outcome": "applied"` with `committed_plan_id: harbor-plan-3` — the
+envelope revoked the standing commitment (`COMMIT_REVOKED` on the trace, with
+the wind reading that did it) and the fleet replanned. Send the **same**
+envelope again and the response is `"outcome": "duplicate"`: at-least-once
+delivery is expected, deduplication is on the delivery identity
+(`messageId`), and the refusal itself is on the record as
+`DUPLICATE_EVENT_IGNORED`. A malformed envelope returns 400 rather than a
+silent ack, so it retries and then dead-letters instead of poisoning the run.
+The sentinel and the push endpoint are the same disruption path on two
+clocks: one polls, one is pushed.
+
+### 4. Determinism check
 
 The seeded lane must not depend on the network. This is asserted mechanically,
 not by inspection: one test makes the live weather adapter unconstructable and
@@ -138,7 +193,7 @@ then runs every gate for both scenarios plus both demos through it.
 .venv/bin/python -m pytest tests/test_live_gate.py -q      # 11 passed
 ```
 
-### 4. Firestore contract suite (optional — needs a JDK + firebase-tools)
+### 5. Firestore contract suite (optional — needs a JDK + firebase-tools)
 
 ```bash
 PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
@@ -147,14 +202,16 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-Expected: `305 passed` with **none skipped** — the emulator turns the 47 skips
-above into passes. Measured on 2026-08-28 against the frozen tree submitted here
-(engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in 14.3s.
+Expected: `318 passed` with **none skipped** — the emulator turns the 47 skips
+above into passes. Measured on 2026-08-28 against the frozen tree
+(engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in
+14.3s; measured again on 2026-08-30 with the sentinel suite included:
+`318 passed` in 14.1s.
 The same contract runs against both backends, so the in-memory store and
 Firestore cannot drift on the question that decides whether a write is
 authoritative.
 
-### 5. Live Google paths (optional — needs your own Google Cloud project)
+### 6. Live Google paths (optional — needs your own Google Cloud project)
 
 These require credentials and **your own** project; the identifiers below are
 mine and must be substituted. None of this is needed to verify anything above.
@@ -216,13 +273,14 @@ from; why the two were not converged is in
 | `test_fence_mandatory.py` | no authoritative write without a declared fence |
 | `test_claim_contention.py` | losing a claim and failing to resolve one are different outcomes |
 | `test_live_gate.py` | the seeded lane cannot reach the network |
+| `test_sentinel.py` | commitment does not end scrutiny: a changed observation revokes and replans through the verifier, applies at most once across restarts, and the sentinel itself holds no authority |
 | `test_log_scrubber.py` | evidence capture redacts credentials before writing, and fails closed |
 
 ## Frozen core
 
-This repository is a single-commit snapshot of a frozen tree. There is no history
-here to diff against, so the provenance below is stated as fact rather than left
-to be re-derived:
+This repository is a snapshot of a frozen tree, published without its
+engineering history. There is no history here to diff against, so the
+provenance below is stated as fact rather than left to be re-derived:
 
 - **The pre-GEAP operational core was frozen first**, at engineering commit
   `cf91551` (named `core-freeze-1`): fencing, claim-contention classification, the
@@ -231,7 +289,9 @@ to be re-derived:
 - **Every file submitted here existed at engineering SHA
   `687eebfd26f64d87f3c8db49756f838dc90bc02a` and is content-identical to it,
   apart from the judge-facing prose (`README.md`, `EVIDENCE.md`, `docs/`) and
-  `.gitignore`, which were finalized after that SHA for this snapshot.**
+  `.gitignore`, which were finalized after that SHA for this snapshot, and the
+  sentinel (`app/sentinel.py`, `tests/test_sentinel.py`), added later at
+  engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`.**
 - **The delta between them, in `app/` and `tests/`, is five files and is
   presentation only:** `app/api.py`, `app/gate.py`, `app/config.py`,
   `app/providers/routes.py`, `tests/test_api.py` — docstrings, two judge-facing
@@ -239,9 +299,11 @@ to be re-derived:
   been made, plus the test that pinned the old wording. `app.gate --json` is
   byte-identical across that change and no verification logic differs.
 - **Everything else added after the core freeze is additive**, not a rewrite of
-  frozen code: the managed-runtime adapter `app/geap/` and
-  `tests/test_log_scrubber.py`. No frozen file was modified to make the managed
-  Google layer work.
+  frozen code: the managed-runtime adapter `app/geap/` with
+  `tests/test_log_scrubber.py`, and the wall-clock re-observation harness
+  `app/sentinel.py` with `tests/test_sentinel.py`. No frozen file was modified
+  to make the managed Google layer or the sentinel work — the sentinel drives
+  the frozen `disrupt()` path and holds no authority of its own.
 
 The delta is declared instead of absorbed because that is the honest form: editing
 those strings and then claiming the original freeze had never moved would have been
