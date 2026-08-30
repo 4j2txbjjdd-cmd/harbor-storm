@@ -16,8 +16,9 @@ has disappeared.
 **Addendum (2026-08-30).** The wall-clock sentinel (`app/sentinel.py` with
 `tests/test_sentinel.py`) and the ReliefRun instantiation
 (`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`)
-were added after that recheck, both additive. The seeded suite now returns
-`280 passed, 47 skipped` and the emulator suite `327 passed` with none
+were added after that recheck, both additive, followed by the web portal
+(`app/portal.py`) and its Cloud Run deployment. The seeded suite now returns
+`287 passed, 47 skipped` and the emulator suite `334 passed` with none
 skipped; every dated figure above is the pre-addition measurement.
 
 ## Read this first
@@ -250,9 +251,9 @@ write if anything credential-shaped survives.
 - **secret** none · **RECHECK** no
 
 ## 16b. Test suite
-- **claim** 280 passing, and the 47 skips are one deliberate cause.
+- **claim** 287 passing, and the 47 skips are one deliberate cause.
 - **action** `.venv/bin/python -m pytest tests -q`
-- **visible** `280 passed, 47 skipped` (`258` at the 2026-08-28 recheck, before the additive sentinel and ReliefRun)
+- **visible** `287 passed, 47 skipped` (`258` at the 2026-08-28 recheck, before the additive sentinel and ReliefRun)
 - **duration** **1.18s cold / ~0.98s warm** (measured) · **lane** SAFE LIVE
 - **have ready** all 47 skips are `tests/test_store_contract.py: set FIRESTORE_EMULATOR_HOST to run` — the Firestore contract suite, skipped by design without an emulator. Say it before a judge asks.
 - **secret** none · **RECHECK** ✅ confirmed 2026-08-28 — `258 passed, 47 skipped`, and all 47

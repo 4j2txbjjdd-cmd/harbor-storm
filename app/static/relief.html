@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReliefRun — live lane</title>
+<style>
+  :root { --ink:#1a232e; --mut:#5b6b7c; --line:#dbe2ea; --bg:#f5f7fa;
+          --card:#ffffff; --bad:#b3261e; --badbg:#fdeceb; --ok:#175e2e;
+          --okbg:#e9f5ec; --move:#1a4fbf; --movebg:#e9effc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width:880px; margin:0 auto; padding:24px 20px 60px; }
+  h1 { font-size:20px; margin:0 0 2px; }
+  .sub { color:var(--mut); margin:0 0 6px; }
+  .badges { float:right; }
+  .badge { display:inline-block; border:1px solid var(--line); border-radius:12px;
+           padding:1px 10px; font-size:12px; color:var(--mut); margin-left:6px;
+           background:var(--card); font-family:ui-monospace,Menlo,monospace; }
+  .disclaimer { font-size:13px; color:var(--mut); border-left:3px solid var(--line);
+                padding:6px 12px; margin:14px 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+          padding:16px 18px; margin-bottom:16px; }
+  button { font:inherit; padding:6px 14px; border-radius:8px; cursor:pointer;
+           border:1px solid var(--line); background:var(--card); margin-right:8px; }
+  button.primary { background:var(--move); border-color:var(--move); color:#fff; }
+  button:disabled { opacity:.45; cursor:default; }
+  .banner { border-radius:8px; padding:10px 14px; margin:12px 0; display:none; }
+  .banner.ok { display:block; background:var(--okbg); color:var(--ok); }
+  .banner.bad { display:block; background:var(--badbg); color:var(--bad); }
+  .hours { display:flex; gap:6px; flex-wrap:wrap; margin:12px 0 4px; }
+  .hour { border:1px solid var(--line); border-radius:8px; padding:6px 0;
+          width:64px; text-align:center; font-family:ui-monospace,Menlo,monospace;
+          font-size:13px; background:var(--card); }
+  .hour .tag { display:block; font-size:10px; font-family:inherit; color:var(--mut); }
+  .hour.bad { background:var(--badbg); border-color:#e7b3af; color:var(--bad); }
+  .hour.move { background:var(--movebg); border-color:#b5c6ee; color:var(--move);
+               border-width:2px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  td { border-top:1px solid var(--line); padding:5px 8px; vertical-align:top; }
+  td.k { font-family:ui-monospace,Menlo,monospace; white-space:nowrap; }
+  td.n { color:var(--mut); width:30px; text-align:right; }
+  .actor { color:var(--mut); white-space:nowrap; }
+  .reason { color:var(--bad); }
+  .mut { color:var(--mut); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badges" id="badges"></div>
+  <h1>ReliefRun — live lane</h1>
+  <p class="sub">One relief mission on a hazard-gated corridor. The verifier, not the model
+  and not this page, decides what becomes operational truth.</p>
+  <p class="disclaimer">This is the forward-looking lane of the Harbor substrate. The
+  mission, village, hospital and vehicle are seeded and fictional.
+  <span id="laneline">The hazard input is shown by the badges above.</span>
+  It demonstrates the mechanism —
+  <em>a mission that was correct when planned loses the right to dispatch when the world
+  moves</em> — not any actual operation. The verified core and its evidence are in the
+  <a href="/">classic dashboard</a> and the repository README.</p>
+
+  <div class="card">
+    <button class="primary" id="new">New mission run</button>
+    <button id="observe" disabled>Re-observe now</button>
+    <button id="alert" disabled style="display:none">Barrier-lake alert</button>
+    <span class="mut" id="runid"></span>
+    <div class="banner" id="banner"></div>
+    <div class="hours" id="hours"></div>
+    <div class="mut" id="legend" style="font-size:12px"></div>
+  </div>
+
+  <div class="card">
+    <table id="trace"><tbody></tbody></table>
+    <p class="mut" id="empty">Start a run to produce a trace.</p>
+  </div>
+</div>
+<script>
+const WINDOWS = [6, 9, 12, 15];
+let runId = null, live = false;
+
+const el = id => document.getElementById(id);
+const j = (m, u, b) => fetch(u, {method:m, headers:{'content-type':'application/json'},
+  body:b ? JSON.stringify(b) : undefined}).then(async r => {
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    return r.json(); });
+
+async function config() {
+  const c = await j('GET', '/relief/config');
+  live = c.weather_provider === 'google';
+  el('badges').innerHTML =
+    `<span class="badge">state: ${c.state_backend}</span>` +
+    `<span class="badge">weather: ${c.weather_provider}</span>` +
+    `<span class="badge">${c.deterministic_replay ? 'deterministic replay' : 'live observations'}</span>`;
+  el('alert').style.display = live ? 'none' : '';
+  el('laneline').textContent = live
+    ? 'The hazard input is a real, live weather forecast for real Himalayan-valley coordinates.'
+    : 'This instance runs the seeded, deterministic hazard fixture; the live lane reads a real forecast for real Himalayan-valley coordinates.';
+}
+
+function paint(summary, trace) {
+  const plan = summary.plan, committed = summary.committed_plan_id;
+  const banner = el('banner');
+  if (committed && plan) {
+    const hr = plan.metrics.departure_hour;
+    banner.className = 'banner ok';
+    banner.textContent = `${committed} committed — departs ${hr}:00 ` +
+      `(payload ${plan.metrics.payload_kg} kg, ${plan.metrics.casualties} to extract). ` +
+      `Revision ${summary.revision}.`;
+  } else {
+    banner.className = 'banner bad';
+    banner.textContent = 'No feasible mission under the current hazard.';
+  }
+  const severe = new Set();
+  for (const e of trace) {
+    if ((e.kind === 'HAZARD_MEASURED' || e.kind === 'HAZARD_UPDATED'))
+      { severe.clear(); (e.payload.severe_hours || []).forEach(h => severe.add(h)); }
+  }
+  const dep = plan ? plan.metrics.departure_hour : null;
+  el('hours').innerHTML = WINDOWS.map(h => {
+    const bad = severe.has(h) || severe.has(h + 1);
+    const cls = dep === h ? 'hour move' : (bad ? 'hour bad' : 'hour');
+    const tag = dep === h ? 'departs' : (bad ? 'hazard' : '');
+    return `<div class="${cls}">${h}:00<span class="tag">${tag}&nbsp;</span></div>`;
+  }).join('');
+  el('legend').textContent = 'convoy windows — red: hazard over limit on the transit, blue: committed departure';
+
+  const rows = trace.map(e => {
+    const d = e.payload || {};
+    const bits = [];
+    if (d.plan_id) bits.push(d.plan_id);
+    if (d.reason) bits.push(`<span class="reason">${d.reason}</span>`);
+    if (d.severe_hours) bits.push(`severe hours [${d.severe_hours.join(', ')}]`);
+    if (d.from_hour !== undefined) bits.push(`${d.from_hour}:00 → ${d.to_hour}:00`);
+    return `<tr><td class="n">${e.seq}</td><td class="k">${e.kind}</td>` +
+           `<td class="actor">${e.actor}</td><td>${bits.join(' · ')}</td></tr>`;
+  }).join('');
+  el('trace').tBodies[0].innerHTML = rows;
+  el('empty').style.display = rows ? 'none' : '';
+}
+
+async function refresh() {
+  if (!runId) return;
+  const [s, t] = await Promise.all([
+    j('GET', `/relief/runs/${runId}`), j('GET', `/relief/runs/${runId}/trace`)]);
+  paint(s, t.trace);
+}
+
+el('new').onclick = async () => {
+  const s = await j('POST', '/relief/runs', {});
+  runId = s.run_id;
+  el('runid').textContent = runId;
+  el('observe').disabled = false;
+  el('alert').disabled = false;
+  await refresh();
+};
+el('observe').onclick = async () => { await j('POST', `/relief/runs/${runId}/observe`, {}); await refresh(); };
+el('alert').onclick = async () => {
+  await j('POST', `/relief/runs/${runId}/observe`, {profile: 'disrupted'}); await refresh(); };
+
+config().catch(e => { el('banner').className = 'banner bad'; el('banner').textContent = e.message; });
+</script>
+</body>
+</html>

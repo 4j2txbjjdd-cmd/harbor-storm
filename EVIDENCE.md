@@ -106,7 +106,7 @@ number gets quoted.
 ## Reproduce the local half in about a minute
 
 ```bash
-.venv/bin/python -m pytest tests -q                    # 280 passed, 47 skipped
+.venv/bin/python -m pytest tests -q                    # 287 passed, 47 skipped
 .venv/bin/python -m app.gate                           # both scenarios 5/5, SURVIVES
 .venv/bin/python -m app.demo harborwindow --pretty     # 16-line trace, COMMITTED -> harbor-plan-2
 .venv/bin/python -m app.demo stormslot --pretty        # 16-line trace, COMMITTED -> stormslot-plan-2

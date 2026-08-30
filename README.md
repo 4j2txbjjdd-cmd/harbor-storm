@@ -85,7 +85,7 @@ python3.12 -m venv .venv          # or any python >= 3.11
 
 | command | expected output | time |
 |---|---|---|
-| `.venv/bin/python -m pytest tests -q` | `280 passed, 47 skipped` | ~1.2s |
+| `.venv/bin/python -m pytest tests -q` | `287 passed, 47 skipped` | ~1.2s |
 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES`<br>`harborwindow — 5/5 mechanical gates, SURVIVES` | ~0.1s |
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
@@ -205,11 +205,11 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-Expected: `327 passed` with **none skipped** — the emulator turns the 47 skips
+Expected: `334 passed` with **none skipped** — the emulator turns the 47 skips
 above into passes. Measured on 2026-08-28 against the frozen tree
 (engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in
 14.3s; measured again on 2026-08-30 with the sentinel and ReliefRun suites
-included: `327 passed` in 14.2s.
+included: `334 passed` in 14.2s.
 The same contract runs against both backends, so the in-memory store and
 Firestore cannot drift on the question that decides whether a write is
 authoritative.
@@ -278,6 +278,7 @@ from; why the two were not converged is in
 | `test_live_gate.py` | the seeded lane cannot reach the network |
 | `test_sentinel.py` | commitment does not end scrutiny: a changed observation revokes and replans through the verifier, applies at most once across restarts, and the sentinel itself holds no authority |
 | `test_reliefrun.py` | the third instantiation passes the same membrane assertions: calm-forecast negative control, named-reason refusals, verify-before-commit, post-commit revocation, deterministic replay, disjoint actor scopes |
+| `test_portal.py` | the web lane keeps the contracts: at-most-once observation under redelivery, verifier-only authority, the frozen app served unchanged underneath, and the seeded control refused on the live lane |
 | `test_log_scrubber.py` | evidence capture redacts credentials before writing, and fails closed |
 
 ## The third instantiation: ReliefRun
@@ -313,12 +314,28 @@ negative control is in `tests/test_reliefrun.py`: under a benign forecast the
 first-light departure survives untouched. The sentinel watches this scenario
 too, so the same story runs across wall-clock ticks.
 
+**It is deployed.** The live lane runs at
+<https://harbor-storm-801248256447.us-central1.run.app/relief> — Cloud Run,
+one pinned instance (see `deploy/service.yaml` for why), runs durable in
+Firestore (database `harbor`), and the frozen classic dashboard at the root
+of the same service. The page's badges state exactly which lane the instance
+is on; the deterministic seeded lane is the reference there exactly as it is
+locally. Locally the same surface is
+`.venv/bin/python -m uvicorn app.portal:portal --port 8001`. One note for
+reproducers: Google's frontend intercepts `/healthz` on `run.app` domains —
+use `/config`.
+
 ReliefRun is additive: `app.demo`, `app.gate`, the config surface and the API
 are byte-identical to the frozen tree, and the scenario is deliberately not
 part of the two-scenario decision gate. It exists to show the mapping is
 direct — sailing slots become convoy windows, cargo capacity becomes payload
 and hospital beds, marine weather becomes corridor hazard — and nothing in
-the membrane had to change to carry it.
+the membrane had to change to carry it. The web lane is `app/portal.py`: it
+mounts the frozen API unchanged and adds `/relief/*` on top, with
+observations content-addressed exactly as in the sentinel, so an external
+clock (for example a Cloud Scheduler job calling
+`POST /relief/runs/<id>/observe`) can re-verify the standing mission on real
+time and a redelivered observation applies at most once.
 
 ## Frozen core
 
@@ -338,7 +355,9 @@ provenance below is stated as fact rather than left to be re-derived:
   engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`; and ReliefRun
   (`app/scenarios/reliefrun.py`, `app/relief_demo.py`,
   `tests/test_reliefrun.py`, plus the sentinel gaining it as a watchable
-  scenario), added at engineering SHA `893f759`.**
+  scenario), added at engineering SHA `893f759`; and the portal
+  (`app/portal.py`, `app/static/relief.html`, `tests/test_portal.py`), added
+  at engineering SHA `9803336`.**
 - **The delta between them, in `app/` and `tests/`, is five files and is
   presentation only:** `app/api.py`, `app/gate.py`, `app/config.py`,
   `app/providers/routes.py`, `tests/test_api.py` — docstrings, two judge-facing
@@ -348,11 +367,13 @@ provenance below is stated as fact rather than left to be re-derived:
 - **Everything else added after the core freeze is additive**, not a rewrite of
   frozen code: the managed-runtime adapter `app/geap/` with
   `tests/test_log_scrubber.py`, the wall-clock re-observation harness
-  `app/sentinel.py` with `tests/test_sentinel.py`, and the ReliefRun
-  instantiation with `tests/test_reliefrun.py`. No frozen file was modified to
-  make any of them work — the sentinel drives the frozen `disrupt()` path and
-  holds no authority of its own, and ReliefRun reuses the frozen membrane
-  without being wired into `app.demo`, `app.gate` or the API.
+  `app/sentinel.py` with `tests/test_sentinel.py`, the ReliefRun
+  instantiation with `tests/test_reliefrun.py`, and the portal with
+  `tests/test_portal.py`. No frozen file was modified to make any of them
+  work — the sentinel drives the frozen `disrupt()` path and holds no
+  authority of its own, ReliefRun reuses the frozen membrane without being
+  wired into `app.demo`, `app.gate` or the API, and the portal mounts the
+  frozen API unchanged underneath its added routes.
 
 The delta is declared instead of absorbed because that is the honest form: editing
 those strings and then claiming the original freeze had never moved would have been
@@ -379,7 +400,10 @@ set out in [Reproduce it](#reproduce-it) — and no single engine demonstrates
 the combined path.
 
 Earlier exploration considered Cloud Run, Pub/Sub, Google Routes, and other
-extensions. They are not part of the submitted architecture.
+extensions. As of 2026-08-30, Cloud Run is exercised after all: it hosts the
+public portal above. The managed Pub/Sub service and Google Routes remain
+unused (the Pub/Sub *push endpoint* is exercised locally — see the
+long-horizon section).
 
 ## Firestore emulator
 
