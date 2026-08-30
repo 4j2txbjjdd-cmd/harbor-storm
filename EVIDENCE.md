@@ -20,7 +20,10 @@ converged is in [`docs/GEAP_D0_D1.md`](docs/GEAP_D0_D1.md).
 **COMMITTED** = a file in this repository.
 **LOCAL** = runs offline with no credentials.
 **STATED** = a provenance fact recorded here rather than re-derivable here; this
-repository is a single-commit snapshot with no history in it to diff against.
+repository publishes the frozen tree without its engineering history, so the
+freeze cannot be diffed against here. The commits this repository does carry
+all post-date first publication and are declared additions (prose, the
+sentinel, ReliefRun, the portal) — see the provenance rows below.
 
 ## Scenario and scope
 
@@ -78,7 +81,7 @@ shorthand for the record's `jsonPayload.authzPolicyInfo.result` field.*
 | claim | what it proves | primary artifact / doc | live or committed |
 |---|---|---|---|
 | The core was frozen before the managed work | the pre-GEAP operational core was frozen at engineering commit `cf91551` (`core-freeze-1`) before any Google managed-platform work began, so that layer had to be built *around* the verification core rather than by rewriting it — which is only checkable because the baseline is a fixed, named commit | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
-| The submitted tree | the code and evidence here are content-identical to engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`; the judge-facing prose (`README.md`, this file, `docs/`) and `.gitignore` were finalized after that SHA for this snapshot. The delta from the frozen core, across `app/` and `tests/`, is **five** files — `app/api.py`, `app/gate.py`, `app/config.py`, `app/providers/routes.py`, `tests/test_api.py` — and is presentation only: `app.gate --json` is byte-identical across the change and no verification logic differs. Everything else added since the freeze is additive (`app/geap/`, `tests/test_log_scrubber.py`) | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
+| The submitted tree | the code and evidence here are content-identical to engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`; the judge-facing prose (`README.md`, this file, `docs/`) and `.gitignore` were finalized after that SHA for this snapshot. The delta from the frozen core, across `app/` and `tests/`, is **five** files — `app/api.py`, `app/gate.py`, `app/config.py`, `app/providers/routes.py`, `tests/test_api.py` — and is presentation only: `app.gate --json` is byte-identical across the change and no verification logic differs. Everything else added since the freeze is additive: `app/geap/` with `tests/test_log_scrubber.py` at that SHA, and — after first publication — the sentinel (`app/sentinel.py`, `tests/test_sentinel.py`, engineering SHA `4296831`), ReliefRun (`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`, engineering SHA `893f759`), and the portal (`app/portal.py`, `app/static/relief.html`, `tests/test_portal.py`, engineering SHA `9803336`). No frozen file was modified by any of them | [`docs/CORE_FREEZE.md`](docs/CORE_FREEZE.md) | STATED |
 | Independent verification | a claim was not accepted on the strength of the run that produced it: evidence was re-collected from a detached checkout of a recorded SHA, against live cloud state, before the change it justified was accepted. The review history itself lives in the private engineering repository and is not part of this snapshot | see *Evidence is tied to fixed repository state*, below | STATED |
 | Cloud resource inventory | why each live engine exists and which evidence file it produced — the part no API can answer | [`docs/GEAP_CLOUD_INVENTORY.md`](docs/GEAP_CLOUD_INVENTORY.md) | COMMITTED |
 

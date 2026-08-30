@@ -340,8 +340,10 @@ time and a redelivered observation applies at most once.
 ## Frozen core
 
 This repository is a snapshot of a frozen tree, published without its
-engineering history. There is no history here to diff against, so the
-provenance below is stated as fact rather than left to be re-derived:
+engineering history. The freeze points cannot be diffed against here — the
+commits this repository carries all post-date first publication and are the
+declared additions below — so the provenance is stated as fact rather than
+left to be re-derived:
 
 - **The pre-GEAP operational core was frozen first**, at engineering commit
   `cf91551` (named `core-freeze-1`): fencing, claim-contention classification, the

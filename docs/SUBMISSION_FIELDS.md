@@ -318,11 +318,14 @@ This repository publishes the frozen submitted tree without its engineering
 history, so the answer is stated as fact rather than as a diff to run here.
 The submitted code and evidence are content-identical to engineering SHA
 `687eebfd26f64d87f3c8db49756f838dc90bc02a` (the judge-facing documents were
-finalized after that SHA, and the sentinel — `app/sentinel.py`,
-`tests/test_sentinel.py` — was added later as purely additive files at
-engineering SHA `429683114373b4fe197d9fc1da34509747bb2a5d`). Comparing `app`
-and `tests` (modified, deleted or renamed files only — the two added sentinel
-files are declared above, not hidden by this filter):
+finalized after that SHA, and three purely additive layers were added later at
+their own engineering SHAs: the sentinel — `app/sentinel.py`,
+`tests/test_sentinel.py` — at `4296831`, ReliefRun —
+`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`
+— at `893f759`, and the portal — `app/portal.py`, `app/static/relief.html`,
+`tests/test_portal.py` — at `9803336`). Comparing `app` and `tests` (modified,
+deleted or renamed files only — the added files are declared above, not hidden
+by this filter):
 
 | against | files changed under `app` and `tests` |
 |---|---|
@@ -350,8 +353,8 @@ reasoning is set out in [`../EVIDENCE.md`](../EVIDENCE.md).
   [docs/DEMO_CAPTURE_MAP.md](DEMO_CAPTURE_MAP.md).
 - Submit the Devpost form itself.
 - **Two freeze tags, and the difference between them is stated.** Both are
-  engineering-repository provenance, not objects in this single-commit
-  publication: `core-freeze-1` (`cf91551`) is the historical operational freeze
+  engineering-repository provenance, not objects in this publication (which
+  omits the engineering history): `core-freeze-1` (`cf91551`) is the historical operational freeze
   and has not moved, and `submission-freeze-2` is what was submitted — the code
   and evidence published here, engineering SHA `687eebfd`. The delta between them is five
   files and is presentation only: `app.gate`'s printed footer and one docstring

@@ -282,7 +282,10 @@ control-plane readbacks — is collected against a fixed, recorded commit and
 verified before it is promoted into a claim. The code and evidence submitted
 here are content-identical to engineering SHA
 `687eebfd26f64d87f3c8db49756f838dc90bc02a`; the judge-facing documents were
-finalized after that SHA for this snapshot.
+finalized after that SHA for this snapshot, and the post-publication additions
+— the sentinel, ReliefRun and the portal — are declared, purely additive files
+at their own engineering SHAs (`4296831`, `893f759`, `9803336`; see the
+README's Frozen core section). No frozen file moved.
 
 Evidence collected from a moving tree is void. Before any run whose numbers are
 quoted, the tree must be a known committed SHA with no uncommitted or untracked

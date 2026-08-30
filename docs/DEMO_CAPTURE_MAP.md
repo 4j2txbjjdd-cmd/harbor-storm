@@ -264,9 +264,11 @@ write if anything credential-shaped survives.
 ## 17. Frozen-core integrity
 - **claim** The managed layer was built *around* a frozen core, not by rewriting it.
 - **action** put `docs/CORE_FREEZE.md` on screen and state the freeze record. This
-  submission repository is a single-commit tree — no history, no tags, no second commit —
-  so the record is presented as **stated fact**, not as a diff a judge is asked to run.
-  Do not hand a judge a git command here; it cannot succeed in this tree.
+  submission repository publishes the frozen tree without its engineering history —
+  the commits it does carry all post-date first publication and are the declared
+  additive layers (prose, sentinel, ReliefRun, portal) — so the freeze record is
+  presented as **stated fact**, not as a diff a judge is asked to run. A git
+  command here can show only those declared additions, never the freeze points.
 - **the record, as stated**
   - the submitted code and evidence are content-identical to engineering SHA
     `687eebfd26f64d87f3c8db49756f838dc90bc02a` (the judge-facing documents were

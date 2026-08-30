@@ -2,10 +2,13 @@
 
 This document is a **provenance record, stated as fact.** The freeze discipline
 it describes was carried out in the engineering history. The submitted
-repository is a single snapshot of the result: it carries no tags, no branches
-and no prior commits, so nothing here can be checked out or diffed against.
-Every identifier below is given so the record is legible, not so it can be
-re-run.
+repository publishes a snapshot of the result without that history: it carries
+no tags or branches, and none of the freeze points can be checked out or
+diffed against here. The commits this repository does carry all post-date
+first publication and are the declared additions (prose corrections, the
+sentinel, ReliefRun, the portal — declared later in this document); none of
+them touches a frozen file. Every identifier below is given so the record is
+legible, not so it can be re-run.
 
 ```
 FREEZE_SHA      cf9155156f5cbfbc4e35cf8d9c356072abdd1fcc   ("cf91551")
@@ -320,7 +323,8 @@ Chronology, stated:
 
 The frozen core was not rewritten to make the managed work possible. The exact
 shape of that is a matter of record, and is stated here rather than left to a
-command, because this repository is a snapshot with no history to diff:
+command, because the engineering history the freezes live in is not published
+in this repository:
 
 - Between the submitted tree and `submission-freeze-2`, **no file under `app/`
   or `tests/` was modified, deleted or renamed.** That delta is empty.
