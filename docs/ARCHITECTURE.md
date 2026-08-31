@@ -37,9 +37,10 @@ and on **2026-08-31 the split was converged**: engine **C**,
 actor end-to-end — accept and stale-control runs, with the Gateway's own
 ALLOWED records (`geap/d2_converged_accept.json`,
 `geap/d2_converged_control.json`, `geap/gw_logs_converged.json`,
-`geap/d2_deployed_converged.json`). Engines A and B remain in the diagram as
-the original, more granular proofs — each control was first demonstrated in
-isolation, which is why the converged run is attributable at all.
+`geap/gw_logs_converged_firestore.json`, `geap/d2_deployed_converged.json`).
+Engines A and B remain in the diagram as the original, more granular proofs —
+each control was first demonstrated in isolation, which is why the converged
+run is attributable at all.
 
 ```mermaid
 flowchart TD
@@ -56,7 +57,7 @@ flowchart TD
 
     subgraph GEAP["Demonstrated on Google Agent Runtime — two original proofs, converged 2026-08-31"]
 
-        subgraph EA["ENGINE A · 3244216260136796160 · actor proof · NOT gateway-bound"]
+        subgraph EA["ENGINE A · 3244216260136796160 · original actor proof · NOT gateway-bound"]
             GEM["<b>Gemini 3.5 Flash</b><br/>server-reported, reasons from what it read"]
             TOOLS["bounded tool surface — exactly five<br/>claim_work · read_facts · report_constraint<br/>propose_plan · read_trace"]
             NOAUTH["✕ no verify · no commit · no peer transfer<br/><i>audited on the outgoing request</i>"]
@@ -64,7 +65,7 @@ flowchart TD
             TOOLS --- NOAUTH
         end
 
-        subgraph EB["ENGINE B · 2414533581910048768 · governed-egress proof · gateway-bound"]
+        subgraph EB["ENGINE B · 2414533581910048768 · original governed-egress proof · gateway-bound"]
             ID["Agent Identity<br/><i>issued by Google, deployed with no<br/>service_account key in the create config</i>"]
             GW["Agent Gateway<br/><i>agent-to-anywhere, default deny</i>"]
             IAP["IAP authorization<br/><i>failOpen = false</i>"]
@@ -73,19 +74,19 @@ flowchart TD
         end
     end
 
-    WA -->|"executes as a real managed actor"| EA
-    CA -.->|"same substrate, same bounds"| EA
-    HA -.->|"same substrate, same bounds"| EA
-
     REG -->|"iap.egressor <b>granted</b>"| WX["Google Weather API<br/><b>200</b> · real forecast · server ESF"]
     REG -->|"iap.egressor <b>absent</b>"| DENY1["<b>403</b> IAP-generated<br/>before the destination"]
     REG -->|"<b>unregistered</b>"| DENY2["<b>403</b><br/>not in Agent Registry"]
 
-    CONV["<b>ENGINE C · 6110651869841850368 · harbor-converged · 2026-08-31</b><br/>the same gateway-bound engine runs the actor end-to-end:<br/>accept run committed · stale control refused · Gateway ALLOWED records<br/><i>geap/d2_converged_accept.json · d2_converged_control.json · gw_logs_converged.json</i>"]
-    EA -.->|"actor proof, converged onto"| CONV
-    EB -.->|"governance proof, converged onto"| CONV
+    CONV["<b>ENGINE C · 6110651869841850368 · harbor-converged · submitted path</b><br/>gateway-bound managed actor end-to-end:<br/>Gemini proposes · accept run committed · stale control refused<br/>model-plane + telemetry + Firestore Gateway ALLOWED records"]
+    EA -.->|"original actor proof"| CONV
+    EB -.->|"original governance proof"| CONV
 
-    EA --> PLAN["<b>CandidatePlan</b><br/>bound to the revision the actor observed"]
+    WA -->|"executes as the real managed actor"| CONV
+    CA -.->|"same substrate, deterministic publisher in current proof"| CONV
+    HA -.->|"same substrate, deterministic publisher in current proof"| CONV
+
+    CONV --> PLAN["<b>CandidatePlan</b><br/>bound to the revision the actor observed"]
 
     PLAN --> VER{"<b>deterministic verifier</b><br/>recomputes from authoritative facts<br/>metrics ignored · unreachable by any model"}
 
@@ -101,12 +102,10 @@ flowchart TD
     classDef deny fill:#fce8e6,stroke:#c5221f,color:#a50e0e
     classDef allow fill:#e6f4ea,stroke:#137333,color:#0d652d
     classDef truth fill:#fef7e0,stroke:#f9ab00,color:#b06000
-    classDef gap fill:#f1f3f4,stroke:#5f6368,color:#3c4043
     class EA,EB,GW,IAP,REG,ID google
     class DENY1,DENY2,STALE,REJ,NOAUTH deny
-    class WX,COMMIT allow
+    class WX,COMMIT,CONV allow
     class FS truth
-    class CONV allow
 ```
 
 **Read the split deliberately — it is the provenance of the convergence, not a
@@ -139,11 +138,13 @@ this repository claimed a single engine did both — that restraint was
 deliberate, and it ended only when engine **C** demonstrated it:
 `geap/d2_converged_accept.json` (actor run, verifier commit, Firestore-backed
 state on the gateway-bound engine), `geap/d2_converged_control.json` (the
-stale refusal on the same engine), and `geap/gw_logs_converged.json` (the
-Gateway's ALLOWED records for the model-plane and telemetry egress of those
-runs). What the committed gateway-success log does and does not capture is
-stated precisely in [`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md)'s convergence
-addendum.
+stale refusal on the same engine), `geap/gw_logs_converged.json` (Gateway
+ALLOWED records for model-plane and telemetry), and
+`geap/gw_logs_converged_firestore.json` (Gateway ALLOWED Firestore records).
+Credential egress is denial-proven before binding but has no separately captured
+ALLOWED success record; its post-binding success is inferred from the completed
+run. The detailed convergence record is in
+[`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md)'s addendum.
 
 ## The two boundaries that carry the claim
 
@@ -243,13 +244,11 @@ In rows 6–8, `authz=ALLOWED` / `authz=DENIED` is shorthand for
   what the proven vertical slice covers. `cargo-agent` and `harbormaster-agent`
   hold the same bounds on the same substrate but publish their constraints
   deterministically in the current proof — drawn dashed for that reason.
-- **The actor path and the governed-egress proof currently run on two Reasoning
-  Engines.** Each control is independently demonstrated. Collapsing them onto one
-  engine needs the actor's Google API dependencies — Vertex AI and Firestore —
-  reachable through the governed egress configuration: registered in the Agent
-  Registry **and** granted per-endpoint IAP authorization, because registration
-  is not itself an authorization allowlist. Row 7 is exactly that case: a
-  registered endpoint with no binding, refused.
+- **Engines A and B remain only as provenance for the controls they proved in
+  isolation.** Engine C, `6110651869841850368`, is the submitted converged path:
+  it is gateway-bound and runs the managed actor end-to-end. The A/B record is
+  retained because it shows the actor and governance controls independently
+  before their convergence.
 - **No historical clutter**: superseded engines, failed iterations, IAM-propagation
   archaeology and the quarantined gRPC investigation are in the evidence
   inventory, not the submission diagram.
@@ -297,13 +296,14 @@ Evidence: `geap/d1_shift_control.json` (claim 13) and `tests/test_stale_plan.py`
 
 Every number in this repository — test counts, gate results, trace excerpts,
 control-plane readbacks — is collected against a fixed, recorded commit and
-verified before it is promoted into a claim. The code and evidence submitted
-here are content-identical to engineering SHA
-`687eebfd26f64d87f3c8db49756f838dc90bc02a`; the judge-facing documents were
-finalized after that SHA for this snapshot, and the post-publication additions
-— the sentinel, ReliefRun and the portal — are declared, purely additive files
-at their own engineering SHAs (`4296831`, `893f759`, `9803336`; see the
-README's Frozen core section). No frozen file moved.
+verified before it is promoted into a claim. Engineering SHA
+`687eebfd26f64d87f3c8db49756f838dc90bc02a` is the original frozen
+code/evidence baseline, not the final submitted tree. Later layers are declared
+additions: the sentinel, ReliefRun, the portal, ReliefFleet, trace metrics, the
+seismic stream, the Engine C convergence artifacts, and the 2026-08-31 clock,
+portal-lifecycle and USGS lookback fixes. The invariant that remained unchanged
+is the frozen core, not the entire tree. See the README's Frozen core section and
+`EVIDENCE.md`'s provenance table for the layer-by-layer record.
 
 Evidence collected from a moving tree is void. Before any run whose numbers are
 quoted, the tree must be a known committed SHA with no uncommitted or untracked
