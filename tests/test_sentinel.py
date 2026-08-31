@@ -130,6 +130,26 @@ def test_sentinel_holds_no_authority(scenario):
             assert e["actor"] == "verifier"
 
 
+def test_live_watcher_gets_a_fresh_provider_every_tick():
+    """The Google adapter caches each location forever after its first
+    fetch, so a watcher that keeps one provider instance would re-read the
+    same forecast until process death. A weather factory must be consulted
+    on every tick."""
+    store, _weather, _sentinel = fresh_run("harborwindow")
+    built = []
+
+    def factory():
+        built.append(1)
+        return weather_fixture()
+
+    sentinel = Sentinel(store, weather_fixture(), "harborwindow",
+                        baseline_fingerprint=None, weather_factory=factory)
+    sentinel.tick()
+    sentinel.tick()
+    sentinel.tick()
+    assert len(built) == 3
+
+
 def test_fingerprint_is_deterministic_and_sensitive():
     facts = harborwindow.build_state().facts
     a = observation_fingerprint("harborwindow", facts, weather_fixture())

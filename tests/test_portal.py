@@ -28,7 +28,7 @@ def start(client):
 
 def test_seeded_run_commits_the_nine_oclock_mission(client):
     body = start(client)
-    assert body["committed_plan_id"] == "relief-plan-2"
+    assert body["committed_plan_id"] == "relief-r0-p2"
     assert body["plan"]["metrics"]["departure_hour"] == 9.0
 
 
@@ -40,7 +40,7 @@ def test_barrier_lake_alert_revokes_and_recommits(client):
     assert body["revision_advanced"] is True
     kinds = [e["kind"] for e in body["new_events"]]
     assert "COMMIT_REVOKED" in kinds
-    assert body["committed_plan_id"] == "relief-plan-3"
+    assert body["committed_plan_id"] == "relief-r1-p3"
 
     # Same forecast observed again -- a scheduler redelivery -- moves nothing.
     r2 = client.post(f"/relief/runs/{run_id}/observe",
@@ -48,7 +48,7 @@ def test_barrier_lake_alert_revokes_and_recommits(client):
     body2 = r2.json()
     assert body2["revision_advanced"] is False
     assert [e["kind"] for e in body2["new_events"]] == ["DUPLICATE_EVENT_IGNORED"]
-    assert body2["committed_plan_id"] == "relief-plan-3"
+    assert body2["committed_plan_id"] == "relief-r1-p3"
 
 
 def test_authority_stays_with_the_verifier(client):
@@ -64,6 +64,22 @@ def test_authority_stays_with_the_verifier(client):
 def test_unknown_run_is_404(client):
     assert client.get("/relief/runs/nope").status_code == 404
     assert client.post("/relief/runs/nope/observe", json={}).status_code == 404
+
+
+def test_create_means_create(client):
+    """The creation endpoint must never open an existing operational run:
+    re-planning a running mission belongs to the fenced observe lifecycle."""
+    assert client.post("/relief/runs",
+                       json={"run_id": "mission-a"}).status_code == 200
+    second = client.post("/relief/runs", json={"run_id": "mission-a"})
+    assert second.status_code == 409
+    assert "observe it instead" in second.json()["detail"]
+
+
+def test_default_run_ids_do_not_collide(client):
+    a = client.post("/relief/runs", json={}).json()["run_id"]
+    b = client.post("/relief/runs", json={}).json()["run_id"]
+    assert a != b
 
 
 def test_relief_page_and_config_serve(client):

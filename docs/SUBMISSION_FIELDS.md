@@ -21,10 +21,13 @@ still dated 2026-08-28.*
 
 ---
 
-## Built With — 18 tags
+## Built With — 23 tags
 
-Devpost asks for implementation technology, capped at 25 tags. These 18 are each
-exercised in the path being submitted.
+Devpost asks for implementation technology, capped at 25 tags. Each tag below is
+exercised in the path being submitted: rows 1–18 as checked on 2026-08-28, and
+five added with the live lane on 2026-08-30 — Cloud Run (19), Cloud Build (20),
+Artifact Registry (21, reinstated below), Cloud Scheduler (22), and the live
+Weather lane (23).
 
 | # | tag | what makes it true |
 |---|---|---|
@@ -282,7 +285,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 | 4 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` |
 | 5 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` |
 | 6 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` |
-| 7 | `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace: mission refused at first light on a named hazard, committed at 9:00, revoked by the barrier-lake alert, re-committed at 12:00 — `COMMITTED -> relief-plan-3` |
+| 7 | `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace: mission refused at first light on a named hazard, committed at 9:00, revoked by the barrier-lake alert, re-committed at 12:00 — `COMMITTED -> relief-r1-p3` (plan ids are revision-qualified: `relief-r{revision}-p{n}`) |
 
 **Command 2 never touches the network, and that is the point of the test.** The
 live-gate tests run against controlled providers so that a green suite proves the

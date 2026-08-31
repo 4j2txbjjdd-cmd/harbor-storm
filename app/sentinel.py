@@ -72,7 +72,8 @@ class Sentinel:
 
     def __init__(self, store: Store, weather: WeatherProvider, scenario: str,
                  routes: Optional[RouteProvider] = None,
-                 baseline_fingerprint: Optional[str] = None):
+                 baseline_fingerprint: Optional[str] = None,
+                 weather_factory=None, clock=None):
         if scenario not in WATCHABLE:
             raise ValueError(f"unknown scenario {scenario!r}")
         if scenario == "stormslot" and routes is None:
@@ -82,27 +83,48 @@ class Sentinel:
         self.scenario = scenario
         self.routes = routes
         self.last_fingerprint = baseline_fingerprint
+        # The live Google provider caches each location after its first
+        # fetch, with no TTL -- correct for a one-shot run, wrong for a
+        # watcher. A live sentinel must therefore construct a fresh provider
+        # per tick, or every tick after the first re-reads the same forecast
+        # forever. Pass a zero-arg factory to get that; the seeded lane
+        # keeps its fixture instance and stays deterministic.
+        self.weather_factory = weather_factory
+        # Optional zero-arg callable returning a timezone-aware datetime in
+        # the scenario's local time. Only ReliefRun consumes it (see
+        # reliefrun.observe): the clock becomes part of the verified truth,
+        # and observation event ids become date-scoped.
+        self.clock = clock
 
-    def _apply(self, fingerprint: str) -> None:
+    def _apply(self, fingerprint: str, now=None) -> None:
         event_id = f"forecast-{fingerprint}"
         if self.scenario == "stormslot":
             stormslot.disrupt(self.store, self.weather, self.routes,
                               event_id=event_id)
         elif self.scenario == "reliefrun":
-            reliefrun.disrupt(self.store, self.weather, event_id=event_id)
+            reliefrun.observe(self.store, self.weather, now=now,
+                              event_id=event_id)
         else:
             harborwindow.disrupt(self.store, self.weather, event_id=event_id)
 
     def tick(self) -> dict:
-        """One observation. Applies the disruption path only when the forecast
-        differs from the last one this sentinel saw."""
+        """One observation. Applies the disruption path only when the
+        observation differs from the last one this sentinel saw. With a
+        clock, the observation is (forecast, clock hour), not the forecast
+        alone: an unchanged forecast at a later hour is still new truth,
+        because a committed departure may have passed in the meantime."""
+        if self.weather_factory is not None:
+            self.weather = self.weather_factory()
+        now = self.clock() if self.clock is not None else None
         before_events = len(self.store.trace())
         before_revision = self.store.state.revision
         fingerprint = observation_fingerprint(
             self.scenario, self.store.state.facts, self.weather)
+        if now is not None:
+            fingerprint = f"{now.strftime('%Y-%m-%dT%H')}-{fingerprint}"
         changed = fingerprint != self.last_fingerprint
         if changed:
-            self._apply(fingerprint)
+            self._apply(fingerprint, now)
         self.last_fingerprint = fingerprint
 
         snap = self.store.snapshot()
@@ -190,8 +212,13 @@ def main(argv: Optional[List[str]] = None) -> None:
               f"committed={snap['committed_plan_id']} "
               f"revision={snap['revision']}", flush=True)
 
-    sentinel = Sentinel(store, weather, args.scenario, routes,
-                        baseline_fingerprint=baseline)
+    sentinel = Sentinel(
+        store, weather, args.scenario, routes,
+        baseline_fingerprint=baseline,
+        # Live lane: a fresh provider per tick, because the Google adapter
+        # caches per location with no TTL and a watcher must actually watch.
+        weather_factory=(lambda: make_weather(settings))
+        if settings.is_live else None)
 
     for n in itertools.count(1):
         if args.disrupt_at_tick is not None and n == args.disrupt_at_tick:

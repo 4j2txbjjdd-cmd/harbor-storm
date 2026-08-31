@@ -90,7 +90,7 @@ python3.12 -m venv .venv          # or any python >= 3.11
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` | ~0.1s |
-| `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace ending `COMMITTED -> relief-plan-3` — see [ReliefRun](#the-third-instantiation-reliefrun) | ~0.1s |
+| `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace ending `COMMITTED -> relief-r1-p3` — see [ReliefRun](#the-third-instantiation-reliefrun) | ~0.1s |
 
 **About the 47 skips.** All 47 are the same suite —
 `tests/test_store_contract.py`, which runs one store contract against both the

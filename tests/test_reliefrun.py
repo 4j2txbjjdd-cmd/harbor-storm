@@ -42,7 +42,7 @@ def test_calm_forecast_keeps_the_booked_departure():
     the hazard."""
     store = fresh_store()
     snap = reliefrun.run(store, calm_weather_fixture())
-    assert snap["committed_plan_id"] == "relief-plan-1"
+    assert snap["committed_plan_id"] == "relief-r0-p1"
     assert "MISSION_RESCHEDULED" not in kinds(store)
     assert "PLAN_REJECTED" not in kinds(store)
 
@@ -50,10 +50,10 @@ def test_calm_forecast_keeps_the_booked_departure():
 def test_hazard_moves_the_mission_on_a_named_reason():
     store = fresh_store()
     snap = reliefrun.run(store, weather_fixture())
-    assert snap["committed_plan_id"] == "relief-plan-2"
+    assert snap["committed_plan_id"] == "relief-r0-p2"
 
     rejected = [e for e in store.events if e.kind == "PLAN_REJECTED"]
-    assert rejected[0].payload["plan_id"] == "relief-plan-1"
+    assert rejected[0].payload["plan_id"] == "relief-r0-p1"
     assert "water hazard" in rejected[0].payload["reason"]
     assert "hour 6" in rejected[0].payload["reason"]
 
@@ -107,16 +107,16 @@ def test_every_commit_is_preceded_by_verification_and_owned_by_the_verifier():
 def test_barrier_lake_alert_revokes_the_committed_mission_and_recommits():
     store = fresh_store()
     snap = reliefrun.run(store, weather_fixture())
-    assert snap["committed_plan_id"] == "relief-plan-2"
+    assert snap["committed_plan_id"] == "relief-r0-p2"
 
     snap = reliefrun.disrupt(store, disrupted_weather_fixture())
 
     revoked = [e for e in store.events if e.kind == "COMMIT_REVOKED"]
-    assert revoked[0].payload["plan_id"] == "relief-plan-2"
+    assert revoked[0].payload["plan_id"] == "relief-r0-p2"
     assert "water hazard" in revoked[0].payload["reason"]
     # The mission that was correct when planned is refused before dispatch,
     # and the fleet re-commits into the next window that verifies.
-    assert snap["committed_plan_id"] == "relief-plan-3"
+    assert snap["committed_plan_id"] == "relief-r1-p3"
     moved = [e for e in store.events if e.kind == "MISSION_RESCHEDULED"]
     assert moved[-1].payload["to_hour"] == 12
 
@@ -133,7 +133,7 @@ def test_seeded_lane_replays_identically_including_the_disruption():
 
     (shape_a, committed_a), (shape_b, committed_b) = one_run(), one_run()
     assert shape_a == shape_b
-    assert committed_a == committed_b == "relief-plan-3"
+    assert committed_a == committed_b == "relief-r1-p3"
 
 
 # --- bounded actors --------------------------------------------------
@@ -177,9 +177,105 @@ def test_sentinel_watches_reliefrun():
     result = sentinel.tick()
     assert result["revision_advanced"] is True
     assert "COMMIT_REVOKED" in [e["kind"] for e in result["new_events"]]
-    assert result["committed_plan_id"] == "relief-plan-3"
+    assert result["committed_plan_id"] == "relief-r1-p3"
 
     restarted = Sentinel(store, weather, "reliefrun", baseline_fingerprint=None)
     replay = restarted.tick()
     assert replay["revision_advanced"] is False
     assert [e["kind"] for e in replay["new_events"]] == ["DUPLICATE_EVENT_IGNORED"]
+
+
+# --- the clock is part of the truth ----------------------------------
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+KTM = ZoneInfo("Asia/Kathmandu")
+
+
+def at(hour, minute=30, day=31):
+    return datetime(2026, 8, day, hour, minute, tzinfo=KTM)
+
+
+def test_a_departure_whose_hour_has_passed_is_revoked_and_replanned():
+    """The semantic hole the clock closes: a commitment can be weather-valid
+    and still undeliverable, because its dispatch time is in the past."""
+    store = fresh_store()
+    reliefrun.run(store, weather_fixture())          # commits 9:00 (r0-p2)
+
+    snap = reliefrun.observe(store, weather_fixture(), now=at(11),
+                             event_id="obs-day1-11")
+    revoked = [e for e in store.events if e.kind == "COMMIT_REVOKED"]
+    assert revoked[0].payload["plan_id"] == "relief-r0-p2"
+    assert "departure 9:00 has passed (now 11:00)" in revoked[0].payload["reason"]
+    assert snap["committed_plan_id"] == "relief-r1-p3"   # 12:00, still future
+    assert snap["plans"]["relief-r1-p3"]["metrics"]["departure_hour"] == 12.0
+
+
+def test_service_day_rolls_over_when_every_window_has_passed():
+    store = fresh_store()
+    reliefrun.run(store, weather_fixture())
+    reliefrun.observe(store, weather_fixture(), now=at(11),
+                      event_id="obs-day1-11")         # standing: 12:00
+
+    snap = reliefrun.observe(store, weather_fixture(), now=at(23),
+                             event_id="obs-day1-23")
+    assert "SERVICE_DAY_ROLLED" in kinds(store)
+    revoked = [e for e in store.events if e.kind == "COMMIT_REVOKED"]
+    assert "departure 12:00 has passed (now 23:00)" in revoked[-1].payload["reason"]
+    # Tomorrow's plan: first light refused on weather, 9:00 commits.
+    assert snap["committed_plan_id"] == "relief-r2-p2"
+    assert snap["plans"]["relief-r2-p2"]["metrics"]["departure_hour"] == 9.0
+
+
+def test_same_hour_redelivery_is_deduplicated():
+    store = fresh_store()
+    reliefrun.run(store, weather_fixture())
+    reliefrun.observe(store, weather_fixture(), now=at(11),
+                      event_id="obs-day1-11")
+    before = store.state.revision
+    reliefrun.observe(store, weather_fixture(), now=at(11, minute=55),
+                      event_id="obs-day1-11")         # same clock bucket
+    assert store.state.revision == before
+    assert kinds(store)[-1] == "DUPLICATE_EVENT_IGNORED"
+
+
+def test_a_run_created_mid_day_does_not_commit_a_passed_window():
+    """The clock applies from the first plan, not only from the first
+    observation: creating a mission at 10:30 must not commit 6:00 or 9:00."""
+    store = fresh_store()
+    now = at(10)
+    snap = reliefrun.run(
+        store, calm_weather_fixture(),
+        now_hour=reliefrun.planning_now_hour(store.state.facts, now))
+    assert snap["committed_plan_id"] == "relief-r0-p3"
+    assert snap["plans"]["relief-r0-p3"]["metrics"]["departure_hour"] == 12.0
+    rejected = [e for e in store.events if e.kind == "PLAN_REJECTED"]
+    assert "departure 6:00 has passed (now 10:00)" in rejected[0].payload["reason"]
+
+
+def test_planning_now_hour_rolls_to_none_after_last_window():
+    facts = reliefrun.build_state().facts
+    assert reliefrun.planning_now_hour(facts, None) is None
+    assert reliefrun.planning_now_hour(facts, at(10)) == 10
+    assert reliefrun.planning_now_hour(facts, at(23)) is None
+
+
+def test_sentinel_clock_makes_an_unchanged_forecast_new_truth():
+    """Without a clock the sentinel gates on the forecast alone; with one,
+    a later hour is a new observation even if the forecast is identical."""
+    weather = SwappableWeather(weather_fixture())
+    store = fresh_store()
+    reliefrun.run(store, weather)
+    times = [at(10), at(11)]
+    sentinel = Sentinel(store, weather, "reliefrun",
+                        clock=lambda: times.pop(0))
+
+    first = sentinel.tick()      # 9:00 mission has passed -> revoke, commit 12:00
+    assert first["revision_advanced"] is True
+    assert "COMMIT_REVOKED" in [e["kind"] for e in first["new_events"]]
+
+    second = sentinel.tick()     # same forecast, new hour: 12:00 still holds
+    assert second["changed"] is True
+    assert second["revision_advanced"] is True
+    assert "COMMIT_REAFFIRMED" in [e["kind"] for e in second["new_events"]]

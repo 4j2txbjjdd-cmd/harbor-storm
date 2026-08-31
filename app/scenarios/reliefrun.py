@@ -40,6 +40,10 @@ def build_state() -> OperationalState:
         facts={
             "corridor": "CORRIDOR_A",
             "village": "VILLAGE_X",
+            # Local time of the corridor: the clock the live lane verifies
+            # against. Real region timezone, consistent with the live
+            # coordinates; the seeded lane never reads it.
+            "timezone": "Asia/Kathmandu",
             "mission_ready_hour": 6,
             # The mission currently on the board: depart at first light.
             "booked_departure_hour": 6,
@@ -74,6 +78,13 @@ def _departure_of(plan: CandidatePlan) -> Optional[int]:
     return None
 
 
+def plan_id_for(basis_revision: int, n: int) -> str:
+    """Plan identity is revision-qualified: the same proposal number at a
+    later world revision is a different proposal, and the trace should never
+    hold one id naming two objects."""
+    return f"relief-r{basis_revision}-p{n}"
+
+
 def _unsafe_reason(hour: int, by_c: Dict[int, WeatherPoint],
                    by_v: Dict[int, WeatherPoint], f: dict) -> Optional[str]:
     for label, table in (("corridor", by_c), ("village", by_v)):
@@ -89,11 +100,17 @@ def _unsafe_reason(hour: int, by_c: Dict[int, WeatherPoint],
 
 
 def make_verifier(store: Store, corridor: List[WeatherPoint],
-                  village: List[WeatherPoint]):
+                  village: List[WeatherPoint],
+                  now_hour: Optional[int] = None):
     """Deterministic feasibility check for a proposed mission.
 
     Recomputes the whole transit from authoritative facts. The plan's own
     metrics are ignored, so an over-confident proposal still fails.
+
+    `now_hour` is the clock: when given, a departure at or before it is
+    refused on a named reason, because a commitment whose dispatch time has
+    passed cannot be dispatched however good the weather looks. The seeded
+    lane passes None and stays purely forecast-driven and deterministic.
     """
     f = store.state.facts
     by_c = {p.hour: p for p in corridor}
@@ -103,6 +120,9 @@ def make_verifier(store: Store, corridor: List[WeatherPoint],
         depart = _departure_of(plan)
         if depart is None:
             return False, "mission proposes no departure"
+        if now_hour is not None and depart <= now_hour:
+            return False, (f"departure {depart}:00 has passed "
+                           f"(now {now_hour}:00)")
         if f["payload_kg"] > f["vehicle_capacity_kg"]:
             return False, (f"payload {f['payload_kg']} kg exceeds vehicle "
                            f"capacity {f['vehicle_capacity_kg']} kg")
@@ -203,7 +223,7 @@ def seed(store: Store, weather: WeatherProvider, fence: FenceArg = UNFENCED,
 
 
 def run(store: Store, weather: WeatherProvider,
-        fence: FenceArg = UNFENCED) -> dict:
+        fence: FenceArg = UNFENCED, now_hour: Optional[int] = None) -> dict:
     f = store.state.facts
     # Every mission below is computed against this revision and binds to it.
     revision = store.state.revision
@@ -212,18 +232,19 @@ def run(store: Store, weather: WeatherProvider,
         return store.snapshot()
     corridor, village = seeded
 
-    verifier = make_verifier(store, corridor, village)
+    verifier = make_verifier(store, corridor, village, now_hour=now_hour)
 
     # 1. The mission on the board: depart at first light.
     booked = f["booked_departure_hour"]
-    store.add_plan(_plan("relief-plan-1", booked, f, revision), fence)
-    if verify_and_commit(store, "relief-plan-1", verifier, fence):
+    first = plan_id_for(revision, 1)
+    store.add_plan(_plan(first, booked, f, revision), fence)
+    if verify_and_commit(store, first, verifier, fence):
         return store.snapshot()
 
     # 2. Refused. Replan: least deviation from the booked departure that
     # verifies -- every hour of delay is casualties waiting.
     store.emit("REPLAN_STARTED", "hazard-agent",
-               {"reason": store.get_plan("relief-plan-1").rejection_reason})
+               {"reason": store.get_plan(first).rejection_reason})
     candidates = sorted(
         (h for h in f["departure_windows"]
          if f["mission_ready_hour"] <= h <= f["latest_departure_hour"]
@@ -231,7 +252,7 @@ def run(store: Store, weather: WeatherProvider,
         key=lambda h: (abs(h - booked), h),
     )
     for n, hour in enumerate(candidates, start=2):
-        pid = f"relief-plan-{n}"
+        pid = plan_id_for(revision, n)
         store.add_plan(_plan(pid, hour, f, revision), fence)
         if verify_and_commit(store, pid, verifier, fence):
             store.emit("MISSION_RESCHEDULED", "ops-agent",
@@ -244,12 +265,17 @@ def run(store: Store, weather: WeatherProvider,
 
 
 def disrupt(store: Store, weather: WeatherProvider,
-            event_id: Optional[str] = None) -> dict:
+            event_id: Optional[str] = None,
+            now_hour: Optional[int] = None,
+            roll_note: Optional[dict] = None,
+            replan_now_hour=...) -> dict:
     """New hazard truth arrives -- a barrier-lake alert, a fresh surge pulse.
 
     Re-verify the committed mission; replan if it no longer holds. Same
     dedup contract as the other scenarios: this call is the deduplication
-    point, and a redelivered message leaves no mark.
+    point, and a redelivered message leaves no mark. `now_hour`, when given,
+    makes the clock part of the truth being verified against (see
+    `make_verifier`); the seeded lane passes None.
     """
     f = store.state.facts
     corridor = weather.hourly(f["corridor"])
@@ -267,12 +293,18 @@ def disrupt(store: Store, weather: WeatherProvider,
     fence = lease.fence
 
     try:
+        if roll_note is not None:
+            store.emit("SERVICE_DAY_ROLLED", "ops-agent", roll_note)
         store.emit("HAZARD_UPDATED", "weather-agent",
                    {"corridor": f["corridor"], "village": f["village"],
                     "severe_hours": unsafe})
-        verifier = make_verifier(store, corridor, village)
+        # The standing commitment is judged against the real clock; the
+        # replan may use different time semantics (a day roll plans
+        # tomorrow's windows, which are all in the future).
+        effective_replan = now_hour if replan_now_hour is ... else replan_now_hour
+        verifier = make_verifier(store, corridor, village, now_hour=now_hour)
         if not reverify_committed(store, verifier, fence):
-            run(store, weather, fence)
+            run(store, weather, fence, now_hour=effective_replan)
     except SupersededWorkerError:
         raise
     except Exception as exc:
@@ -281,3 +313,50 @@ def disrupt(store: Store, weather: WeatherProvider,
         raise
     store.complete_event(event_id, "weather-agent", fence)
     return store.snapshot()
+
+
+def planning_now_hour(facts: dict, now) -> Optional[int]:
+    """The clock a fresh plan should be verified against. None when every
+    window of the current service day has passed -- at that hour planning is
+    for tomorrow, where every window is in the future again -- and None when
+    there is no clock at all (the seeded lane)."""
+    if now is None:
+        return None
+    now_hour = int(now.hour)
+    if now_hour >= max(facts["departure_windows"]):
+        return None
+    return now_hour
+
+
+def observe(store: Store, weather: WeatherProvider, now=None,
+            event_id: Optional[str] = None) -> dict:
+    """One time-aware observation of the standing mission.
+
+    `now` is a timezone-aware datetime in the corridor's local time; None
+    keeps the purely forecast-driven, deterministic behaviour of `disrupt`.
+    With a clock, two truths are checked through one verifier: the forecast,
+    and the fact that a departure whose hour has passed cannot be dispatched
+    however good the weather. When every window of the current service day
+    has passed, the observation plans the next service day instead -- at that
+    hour the forecast's small hours genuinely describe tomorrow -- and the
+    roll is written to the trace inside the same fenced application.
+
+    The caller date-scopes `event_id` (see the portal and the sentinel), so
+    tomorrow's byte-identical forecast is still a new observation.
+    """
+    if now is None:
+        return disrupt(store, weather, event_id=event_id)
+    windows = store.state.facts["departure_windows"]
+    now_hour = int(now.hour)
+    if now_hour >= max(windows):
+        # (planning_now_hour would say None here; kept explicit because the
+        # standing commitment must still be expired against the real clock.)
+        # The service day is over. The standing commitment is expired
+        # against the real clock; the replan runs with tomorrow's semantics,
+        # where every window is in the future again.
+        roll = {"reason": f"all departure windows passed by {now_hour}:00",
+                "planning_for": "next service day"}
+        return disrupt(store, weather, event_id=event_id,
+                       now_hour=now_hour, roll_note=roll,
+                       replan_now_hour=None)
+    return disrupt(store, weather, event_id=event_id, now_hour=now_hour)

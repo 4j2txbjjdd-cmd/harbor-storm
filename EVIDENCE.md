@@ -31,6 +31,7 @@ sentinel, ReliefRun, the portal) — see the provenance rows below.
 |---|---|---|---|
 | HarborWindow is the flagship | the demo scenario, and the one the narrative is built on | [`docs/WHY_HARBOR.md`](docs/WHY_HARBOR.md) | COMMITTED |
 | StormSlot is transfer evidence | the substrate is not specific to one workflow — both scenarios pass the same gates | `.venv/bin/python -m app.gate` → both `5/5 mechanical, SURVIVES` | LOCAL |
+| ReliefRun is the third instantiation *(added 2026-08-30)* | the mapping is direct — hazard-gated corridor, convoy windows, hospital beds — and nothing in the membrane changed to carry it; deliberately outside `app.gate` | `tests/test_reliefrun.py` (membrane assertions incl. calm-forecast negative control); `.venv/bin/python -m app.relief_demo --disrupt --pretty` | LOCAL |
 
 ## The actor, and the authority it does not have  ·  ENGINE A
 
@@ -76,6 +77,21 @@ shorthand for the record's `jsonPayload.authzPolicyInfo.result` field.*
 | IAM names the agent principal | the granted roles are bound to per-engine `principal://` members | [`geap/iam_project_agent_principals.json`](geap/iam_project_agent_principals.json) | COMMITTED + LIVE |
 | Cloud Trace | Agent Runtime emits spans for the managed actor runs *(actor-side spans; engine B runs no actor and emits none of them)* — `generate_content gemini-3.5-flash` and one `execute_tool` span per bounded tool. **Google's instrumentation, not Harbor's**; OpenTelemetry is not claimed as a Harbor-authored integration | live `cloudtrace.googleapis.com`; [`docs/SUBMISSION_FIELDS.md`](docs/SUBMISSION_FIELDS.md) | LIVE |
 
+## The live lane · Cloud Run, real weather, scheduled re-observation *(added 2026-08-30)*
+
+*These rows postdate the 2026-08-28 recheck and describe the deployed
+operational lane; the GEAP rows above are unchanged by it.*
+
+| claim | what it proves | primary artifact / doc | live or committed |
+|---|---|---|---|
+| The portal is deployed and public | a judge can press the buttons | <https://harbor-storm-801248256447.us-central1.run.app/relief> — Cloud Run service `harbor-storm`, `us-central1`, one pinned instance | LIVE |
+| The frozen app is served unchanged underneath | the portal mounts, it does not rewrite | `app/portal.py` (`portal.mount("/", classic)`); `tests/test_portal.py::test_frozen_app_is_served_unchanged_underneath` | COMMITTED + LOCAL |
+| Real weather over real coordinates | the corridor hazard is a live Google forecast for Rasuwa-region coordinates, not a fixture | `GET /relief/config` on the service → `weather_provider: google`, the coordinates, `deterministic_replay: false` | LIVE |
+| Scheduled autonomous re-observation | an external clock re-verifies the standing mission with nobody watching | Cloud Scheduler job `relief-observe` (`*/30 * * * *`, `us-central1`); each observation lands on the durable trace | LIVE |
+| The clock is part of the verified truth | a departure whose hour has passed is revoked on a named reason; end of day rolls planning to tomorrow (`SERVICE_DAY_ROLLED`) | `tests/test_reliefrun.py` clock tests; observation event ids are `(clock-hour, forecast)`-scoped | LOCAL + LIVE |
+| Redelivery applies at most once | scheduler retries and same-hour redelivery land as `DUPLICATE_EVENT_IGNORED` and move nothing | `tests/test_portal.py::test_barrier_lake_alert_revokes_and_recommits` (second observe); verified against the deployed Firestore backend | LOCAL + LIVE |
+| Create means create | `POST /relief/runs` refuses an existing id with 409 — re-planning a running mission belongs to the fenced observe lifecycle | `tests/test_portal.py::test_create_means_create` | LOCAL |
+
 ## Provenance
 
 | claim | what it proves | primary artifact / doc | live or committed |
@@ -116,7 +132,7 @@ number gets quoted.
 .venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2
                                                        # wall-clock ticks: COMMIT_REVOKED -> replan -> harbor-plan-3
 .venv/bin/python -m app.relief_demo --disrupt --pretty # third instantiation: barrier-lake alert revokes the
-                                                       # committed mission, re-commits -> relief-plan-3
+                                                       # committed mission, re-commits -> relief-r1-p3
 ```
 
 Full instructions, including the Firestore emulator run that turns the 47 skips

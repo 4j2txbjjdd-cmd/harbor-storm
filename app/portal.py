@@ -16,9 +16,11 @@ is derived from the forecast, so a repeated or crash-replayed observation
 applies at most once, on any backend.
 """
 from __future__ import annotations
-import time
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.responses import HTMLResponse
@@ -63,6 +65,24 @@ def _weather(settings: Settings, profile: str = "baseline"):
 def _store(settings: Settings, run_id: str, create: bool):
     if settings.state_backend == "firestore":
         from app.core.firestore_store import FirestoreStateStore
+        if create:
+            # Create means create. Opening an existing run through the
+            # creation path would re-plan an already-running mission outside
+            # its fenced observation lifecycle, so an existing id is refused.
+            # (Probe-then-create is not transactional; the id space below is
+            # random enough that the race is a non-event, and losing it
+            # merely re-seeds identical initial state.)
+            try:
+                FirestoreStateStore(run_id, state=None,
+                                    project=settings.gcp_project,
+                                    database=settings.firestore_database)
+            except KeyError:
+                pass
+            else:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"relief run {run_id!r} already exists; "
+                           f"observe it instead of re-creating it")
         state = reliefrun.build_state() if create else None
         try:
             return FirestoreStateStore(run_id, state=state,
@@ -71,11 +91,21 @@ def _store(settings: Settings, run_id: str, create: bool):
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
     if create:
+        if run_id in _memory_runs:
+            raise HTTPException(
+                status_code=409,
+                detail=f"relief run {run_id!r} already exists; "
+                       f"observe it instead of re-creating it")
         _memory_runs[run_id] = InMemoryStateStore(reliefrun.build_state())
     if run_id not in _memory_runs:
         raise HTTPException(status_code=404,
                             detail=f"unknown relief run {run_id!r}")
     return _memory_runs[run_id]
+
+
+def _local_now(store) -> datetime:
+    tz = store.state.facts.get("timezone", "Asia/Kathmandu")
+    return datetime.now(ZoneInfo(tz))
 
 
 class StartRelief(BaseModel):
@@ -124,10 +154,15 @@ def relief_config() -> dict:
 @portal.post("/relief/runs")
 def create_relief_run(body: StartRelief = Body(default=StartRelief())) -> dict:
     settings = _settings()
-    run_id = body.run_id or f"relief-{int(time.time())}"
+    run_id = body.run_id or f"relief-{uuid.uuid4().hex[:10]}"
     weather = _weather(settings)
     store = _store(settings, run_id, create=True)
-    reliefrun.run(store, weather)
+    # Live lane: a run created mid-day must not commit a window that has
+    # already passed; the clock applies from the first plan, not only from
+    # the first observation. Seeded lane: no clock, deterministic.
+    now = _local_now(store) if settings.is_live else None
+    reliefrun.run(store, weather,
+                  now_hour=reliefrun.planning_now_hour(store.state.facts, now))
     return _summary(store, {"run_id": run_id})
 
 
@@ -150,12 +185,22 @@ def observe(run_id: str, body: Observe = Body(default=Observe())) -> dict:
     before_revision = store.state.revision
     before_events = len(store.trace())
     fingerprint = observation_fingerprint("reliefrun", store.state.facts, weather)
-    reliefrun.disrupt(store, weather, event_id=f"forecast-{fingerprint}")
+    # Live lane: the observed truth is (forecast, clock hour), so the event
+    # id buckets by hour — an unchanged forecast at a later hour is still a
+    # new observation, because a committed departure may have passed, and
+    # tomorrow's byte-identical forecast is likewise new. Within one hour,
+    # scheduler redelivery deduplicates. Seeded lane: purely forecast-driven
+    # and deterministic.
+    now = _local_now(store) if settings.is_live else None
+    event_id = (f"forecast-{now.strftime('%Y-%m-%dT%H')}-{fingerprint}"
+                if now is not None else f"forecast-{fingerprint}")
+    reliefrun.observe(store, weather, now=now, event_id=event_id)
 
     snap = store.snapshot()
     return _summary(store, {
         "run_id": run_id,
         "fingerprint": fingerprint,
+        "observed_at_local": now.isoformat(timespec="minutes") if now else None,
         "revision_advanced": snap["revision"] != before_revision,
         "new_events": store.trace()[before_events:],
     })
