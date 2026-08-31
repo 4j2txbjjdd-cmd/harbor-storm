@@ -40,10 +40,10 @@ Weather lane (23).
 | 2 | `Gemini 3.5 Flash` | `geap/d1_shift_accept.json` → `model_versions_reported: ["gemini-3.5-flash"]`, reported by the server, not configured by me |
 | 3 | `Google Agent Development Kit` | `google-adk==2.8.0`; imported at `app/agents/actors.py:147` (`LlmAgent`), `app/agents/tools.py:134` (`FunctionTool`), `app/agents/execution.py:238` (`Runner`), `app/geap/runtime_app.py:354` (`Gemini`) |
 | 4 | `Vertex AI` | `vertexai.Client(...)` in `geap/d1_invoke.py`; `GOOGLE_GENAI_USE_VERTEXAI=true` on the probe path; `aiplatform.googleapis.com` enabled |
-| 5 | `Agent Runtime` | 15 live Reasoning Engines in `us-central1`; the actor proof ran on `3244216260136796160`, which is **not** Gateway-bound, and governed egress was proved separately on `2414533581910048768`, which runs no actor — the combined path is not demonstrated end-to-end on one engine |
+| 5 | `Agent Runtime` | live Reasoning Engines in `us-central1`; the original actor proof ran on `3244216260136796160` and governed egress on `2414533581910048768` — and since 2026-08-31 the **converged engine `6110651869841850368` demonstrates the combined path end-to-end**: the actor executes with every egress Gateway-governed (`geap/d2_converged_accept.json`) |
 | 6 | `Agent Identity` | control-plane GET on the engine returns `identityType: AGENT_IDENTITY` with **no** `serviceAccount` key and an engine-bound `effectiveIdentity` (`geap/d0_readback.json`) |
-| 7 | `Agent Gateway` | engine `2414533581910048768` carries `spec.deploymentSpec.agentGatewayConfig.agentToAnywhereConfig → harbor-egress-gw`; 8 engines bound, and the actor engine `3244216260136796160` is not one of them |
-| 8 | `Agent Registry` | two registered endpoints returned live by `agentregistry.googleapis.com`: `harbor-weather` and `harbor-cargo-ops`. Registration is not an authorization allowlist — `harbor-cargo-ops` is registered and still denied; per-endpoint IAP IAM is what authorizes egress |
+| 7 | `Agent Gateway` | `harbor-egress-gw` governs engine B and the converged engine `6110651869841850368`, whose actor traffic (model plane, telemetry, credentials, Firestore) it carried as `ALLOWED`/200 against registered endpoints (`geap/gw_logs_converged.json`); the original actor engine `3244216260136796160` remains unbound as the historical control |
+| 8 | `Agent Registry` | eight registered services returned live by `agentregistry.googleapis.com`: the original `harbor-weather` and `harbor-cargo-ops`, plus the six actor-path destinations registered denial-first during the 2026-08-31 convergence. Registration is not an authorization allowlist — `harbor-cargo-ops` is registered and still denied; per-endpoint IAP IAM is what authorizes egress |
 | 9 | `Google Cloud` | project `harbor-storm-fleet` (`801248256447`) |
 | 10 | `Cloud Firestore` | `google-cloud-firestore==2.29.0`; authoritative store; independent readback of run `geap-d1-shift-4` returns `committed_plan_id = harbor-agent-plan-1` |
 | 11 | `Google Weather API` | `weather.googleapis.com` is the registered endpoint that also carries `roles/iap.egressor`, so it is the destination egress is authorized to reach; 200 with a real forecast and `server: ESF` in `geap/d1_egress_rotated.json`; also the live weather lane (`app.live_gate`) |
@@ -154,15 +154,19 @@ the project. Enabled is not exercised.
 Put this on the form, and say it out loud in the video. It costs nothing and it
 is the sentence that makes the rest of the claims credible:
 
-> Managed actor execution and governed-egress proof currently use separate Agent
-> Runtime instances; each control is independently demonstrated.
+> The combined actor-plus-Gateway path is demonstrated end-to-end on one
+> engine (`6110651869841850368`, converged 2026-08-31): the actor's every
+> egress — model plane, telemetry, credentials, Firestore — traverses the
+> Gateway against registered, egressor-bound endpoints.
 
-Do not let it drift into something softer. The actor runs on engine
-`3244216260136796160`, which is not Gateway-bound; governed egress was proved on
-engine `2414533581910048768`, which runs no actor. The combined actor-plus-Gateway
-path is **not demonstrated end-to-end on one engine**. Collapsing the two onto one
-engine would require registering Vertex AI and Firestore as egress destinations,
-which was not done.
+The convergence did exactly what the earlier limitation said it would
+require: the actor path's Google API dependencies were registered as egress
+destinations and bound with per-endpoint `iap.egressor`, denial-first — each
+destination named by a gateway refusal before being authorized. Engines A
+(`3244216260136796160`) and B (`2414533581910048768`) remain the original
+two-proof record. Artifacts: `geap/d2_converged_accept.json`,
+`geap/d2_converged_control.json`, `geap/gw_logs_converged.json`,
+`geap/gw_logs_converged_probe.json`.
 
 **A second framing that must not drift.** The `failOpen: false` beat is a
 **configuration property, not a demonstrated behaviour.** No IAP outage was
@@ -176,10 +180,13 @@ outage was tested.
 Sourced from the claim map in [docs/ARCHITECTURE.md](ARCHITECTURE.md) — same 17
 claims, no new ones. This is the table to have open while answering questions.
 
-**[A]** = engine `3244216260136796160`, the actor proof, **not** gateway-bound.
-**[B]** = engine `2414533581910048768`, the governed-egress proof, which runs no
-actor. Two engines, two proofs — no row claims one engine did both, and the
-combined actor-plus-Gateway path is **not demonstrated end-to-end on one engine**.
+**[A]** = engine `3244216260136796160`, the original actor proof, **not**
+gateway-bound. **[B]** = engine `2414533581910048768`, the original
+governed-egress proof, which runs no actor. **[C]** = engine
+`6110651869841850368`, the convergence (2026-08-31): the combined
+actor-plus-Gateway path demonstrated end-to-end on one engine — the rows
+below keep their original [A]/[B] tags because that is where each was first
+proven; the converged artifacts re-prove the [A] rows under [C] governance.
 
 In rows 6–8, `authz=ALLOWED` / `authz=DENIED` is shorthand for
 `jsonPayload.authzPolicyInfo.result` on the gateway log record. Those records

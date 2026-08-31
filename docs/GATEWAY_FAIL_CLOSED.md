@@ -93,7 +93,7 @@ gateway, one transport; the client-side capture reports `is_mtls: true`.
 section is a statement about governed egress on `2414533581910048768` and about
 nothing else. The two are **not demonstrated end-to-end on one engine**, and this
 document does not close that gap — it re-proves the egress behaviour under a
-changed configuration, on the engine that already carried it.
+changed configuration, on the engine that already carried it. *(Superseded 2026-08-31: engine `6110651869841850368` converged the two halves end-to-end — see `docs/GEAP_D0_D1.md`'s addendum; this paragraph records the pre-convergence state.)*
 
 Client-side (`geap/failclosed/http_triad_client.json`):
 

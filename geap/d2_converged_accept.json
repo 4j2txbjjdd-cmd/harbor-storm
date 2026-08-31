@@ -1,0 +1,163 @@
+{
+  "tools_offered_to_model": [
+    "claim_work",
+    "read_facts",
+    "report_constraint",
+    "propose_plan",
+    "read_trace"
+  ],
+  "plan_id": "harbor-agent-plan-1",
+  "model_versions_reported": [
+    "gemini-3.5-flash"
+  ],
+  "verifier_actor": "verifier",
+  "trace": [
+    {
+      "actor": "weather-agent",
+      "seq": 1,
+      "kind": "MARINE_WEATHER_MEASURED",
+      "payload": {
+        "severe_hours": [
+          12,
+          13,
+          16,
+          17
+        ]
+      }
+    },
+    {
+      "payload": {},
+      "seq": 2,
+      "actor": "system",
+      "kind": "WORK_CREATED"
+    },
+    {
+      "seq": 3,
+      "payload": {},
+      "kind": "WORK_CREATED",
+      "actor": "system"
+    },
+    {
+      "actor": "system",
+      "seq": 4,
+      "payload": {},
+      "kind": "WORK_CREATED"
+    },
+    {
+      "kind": "CLAIMED",
+      "actor": "cargo-agent",
+      "seq": 5,
+      "payload": {
+        "work_id": "load"
+      }
+    },
+    {
+      "actor": "harbormaster-agent",
+      "seq": 6,
+      "kind": "CLAIMED",
+      "payload": {
+        "work_id": "slot"
+      }
+    },
+    {
+      "actor": "cargo-agent",
+      "payload": {},
+      "seq": 7,
+      "kind": "CONSTRAINT_REPORTED"
+    },
+    {
+      "kind": "CONSTRAINT_REPORTED",
+      "seq": 8,
+      "actor": "harbormaster-agent",
+      "payload": {}
+    },
+    {
+      "seq": 9,
+      "payload": {
+        "work_id": "window"
+      },
+      "actor": "window-agent",
+      "kind": "CLAIMED"
+    },
+    {
+      "actor": "window-agent",
+      "seq": 10,
+      "payload": {},
+      "kind": "CONSTRAINT_REPORTED"
+    },
+    {
+      "actor": "window-agent",
+      "seq": 11,
+      "kind": "PLAN_PROPOSED",
+      "payload": {
+        "plan_id": "harbor-agent-plan-1"
+      }
+    },
+    {
+      "seq": 12,
+      "payload": {
+        "revision": 0,
+        "plan_id": "harbor-agent-plan-1"
+      },
+      "actor": "verifier",
+      "kind": "PLAN_VERIFIED"
+    },
+    {
+      "payload": {
+        "plan_id": "harbor-agent-plan-1",
+        "revision": 0
+      },
+      "kind": "PLAN_COMMITTED",
+      "seq": 13,
+      "actor": "verifier"
+    }
+  ],
+  "candidate_plan": {
+    "rejection_reason": null,
+    "created_by": "window-agent",
+    "metrics": {},
+    "actions": [
+      {
+        "departure_hour": 14,
+        "type": "reserve_boat"
+      },
+      {
+        "type": "load_cargo",
+        "kg": 320
+      },
+      {
+        "type": "depart",
+        "hour": 14
+      }
+    ],
+    "basis_revision": 0,
+    "id": "harbor-agent-plan-1",
+    "verified": true
+  },
+  "verifier_decision": "accepted",
+  "model_requested": "gemini-3.5-flash",
+  "model_tool_calls": [
+    "claim_work",
+    "read_facts",
+    "read_trace",
+    "report_constraint",
+    "propose_plan"
+  ],
+  "authoritative_state": {
+    "revision": 0,
+    "work_window_claimed_by": "window-agent",
+    "committed_plan_id": "harbor-agent-plan-1"
+  },
+  "model_turns": 6,
+  "run_id": "converged-4",
+  "runtime_infrastructure": {
+    "numeric_project": "838220011567",
+    "observed_at": "2026-08-31T06:19:47+00:00",
+    "env_reasoning_engine": "6110651869841850368",
+    "tenant_infrastructure_sa": "ne21cbb00db953e63p-tp@appspot.gserviceaccount.com",
+    "note": "tenant_infrastructure_sa is the managed host identity, not the Agent Identity; read spec.effectiveIdentity from the control plane for that",
+    "project": "ne21cbb00db953e63p-tp"
+  },
+  "harbor_actor_role": "window-agent",
+  "started_at": "2026-08-31T06:19:47+00:00"
+}

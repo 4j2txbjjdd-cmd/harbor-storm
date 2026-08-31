@@ -84,9 +84,11 @@ write if anything credential-shaped survives.
 - **duration** 60-120s · **lane** PRE-CAPTURE (model latency + 429 risk)
 - **engine** `3244216260136796160` — the **actor** proof engine. It demonstrates the
   managed Gemini actor path and is **not** Gateway-bound. Governed egress is proved on a
-  different engine (#11-13), which does not run the actor. The complete actor-plus-Gateway
-  path is **not demonstrated end-to-end on one engine**; say so wherever the managed path
-  is claimed.
+  different engine (#11-13). **Update 2026-08-31: the combined path now IS
+  demonstrated end-to-end on the converged engine `6110651869841850368`**
+  (`geap/d2_converged_accept.json` + `geap/gw_logs_converged.json`) — a
+  stronger alternative for this shot; the narration no longer needs the
+  two-engine caveat if the converged artifacts are the ones on screen.
 - **artifact** `geap/d1_shift_accept.json`
 - **secret** none · **RECHECK** ✅ confirmed 2026-08-28 — engine `3244216260136796160` is PRESENT in the live
   `reasoningEngines` list (control-plane GET) and holds `roles/aiplatform.user` + `roles/datastore.user`
@@ -188,8 +190,10 @@ write if anything credential-shaped survives.
 - **duration** ~6s · **lane** **SAFE LIVE** — *run this one live, it is the money shot*
 - **engine** `2414533581910048768` — the **egress** proof engine (rotated key + weather
   egressor + fixed classifier). It demonstrates governed egress and does **not** run the
-  actor; the managed actor path is proved on engine `3244216260136796160` (#4). The two
-  halves are not demonstrated end-to-end on one engine, and the cut must not imply they are.
+  actor; the managed actor path is proved on engine `3244216260136796160` (#4).
+  **Update 2026-08-31: the converged engine `6110651869841850368` now
+  demonstrates both halves on one engine** — cutting #4 next to #11-13 is
+  safe if the narration cites the convergence artifacts.
 - **artifact** `geap/d1_egress_rotated.json`
 - **secret** probe now emits `url` path-only; the key is never echoed. **Do not** hand-construct the weather URL on screen.
 - **RECHECK** ✅ confirmed 2026-08-28 — `gcloud iap web get-iam-policy --resource-type=agent-registry
@@ -329,13 +333,14 @@ write if anything credential-shaped survives.
 `#15` (fail closed) is a one-line mention inside the 2:05-2:50 block, framed as
 configuration. `#9`, `#10`, `#18` are B-roll for whichever block has room.
 
-**Say the engine split inside the cut.** The 1:10-1:50 block runs on engine
-`3244216260136796160`, which demonstrates the managed Gemini actor path and is **not**
-Gateway-bound. The 2:05-2:50 block runs on engine `2414533581910048768`, which demonstrates
-governed egress and does **not** run the actor. Both surfaces are real and both are shown,
-but the complete actor-plus-Gateway path is **not demonstrated end-to-end on one engine**.
-Cutting them back to back without saying so would let the sequence imply a single engine
-did both — which is the one thing this cut must not claim.
+**The engine-split disclaimer is retired (2026-08-31).** The converged engine
+`6110651869841850368` demonstrates the complete actor-plus-Gateway path
+end-to-end: accept + stale control + all-`ALLOWED` gateway records
+(`geap/d2_converged_accept.json`, `geap/d2_converged_control.json`,
+`geap/gw_logs_converged.json`). The strongest cut now says the opposite of
+the old caveat: one engine, actor and governance together, with the
+denial-first registration story (`geap/gw_logs_converged_probe.json`) as the
+proof that governance was load-bearing the whole way.
 
 ## Evidence captured to close three gaps (2026-08-28)
 

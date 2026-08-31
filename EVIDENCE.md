@@ -8,13 +8,20 @@ engine**:
 
 | | engine | what it proves | gateway-bound |
 |---|---|---|---|
-| **A** | `3244216260136796160` | the actor proof — a real Gemini runs Harbor's bounded actor and cannot reach authority | **no** |
-| **B** | `2414533581910048768` | the governed-egress proof — Google decides what that identity may reach | **yes** |
+| **A** | `3244216260136796160` | the original actor proof — a real Gemini runs Harbor's bounded actor and cannot reach authority | **no** |
+| **B** | `2414533581910048768` | the original governed-egress proof — Google decides what that identity may reach | **yes** |
+| **C** | `6110651869841850368` | **the convergence (2026-08-31)** — the same bounded actor executes end-to-end with every egress governed by the Gateway | **yes** |
 
-Engine A runs no governed-egress probe; Engine B runs no actor. Nothing here
-claims one engine did both, and the managed actor path and the governed egress
-path are **not demonstrated end-to-end on one engine**. Why they were not
-converged is in [`docs/GEAP_D0_D1.md`](docs/GEAP_D0_D1.md).
+Engines A and B are the original two-proof record, kept as recorded. Engine C
+demonstrates the combined path on one engine: accept
+([`geap/d2_converged_accept.json`](geap/d2_converged_accept.json)), stale
+refusal ([`geap/d2_converged_control.json`](geap/d2_converged_control.json)),
+gateway `ALLOWED`/200 records for the window
+([`geap/gw_logs_converged.json`](geap/gw_logs_converged.json)), and the
+denial-first procedure that got there
+([`geap/gw_logs_converged_probe.json`](geap/gw_logs_converged_probe.json)).
+The history of why A and B were originally split is in
+[`docs/GEAP_D0_D1.md`](docs/GEAP_D0_D1.md).
 
 **LIVE** = reproducible against Google right now (needs your own project).
 **COMMITTED** = a file in this repository.

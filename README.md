@@ -249,22 +249,37 @@ deploying a Reasoning Engine into your own project. See
 `docs/GEAP_D0_D1.md` for the exact deployment and the evidence it produced, and
 `geap/d1_deploy_runtime.py` for the deployment script.
 
-**Two engines carry the managed evidence, and they are not the same engine.**
-Read this before reading the managed claims in either direction:
+**Three engines carry the managed evidence.** Engines A and B are the
+original two-proof record; engine C is their convergence:
 
-- **Engine A — `3244216260136796160`** is the actor proof: a real Gemini 3.5 Flash
-  runs Harbor's bounded actor against a five-tool surface and cannot reach the
-  verifier or the store. Engine A is **not** Gateway-bound, and it runs no
-  governed-egress probe.
-- **Engine B — `2414533581910048768`** is the governed-egress proof: Agent Identity,
-  Agent Gateway, IAP and per-endpoint IAM decide what that identity may reach.
-  Engine B does **not** run the actor.
+- **Engine A — `3244216260136796160`** is the original actor proof: a real
+  Gemini 3.5 Flash runs Harbor's bounded actor against a five-tool surface and
+  cannot reach the verifier or the store. Not Gateway-bound.
+- **Engine B — `2414533581910048768`** is the original governed-egress proof:
+  Agent Identity, Agent Gateway, IAP and per-endpoint IAM decide what that
+  identity may reach. Runs no actor.
+- **Engine C — `6110651869841850368`** runs the actor **and** is
+  Gateway-bound — the combined path, demonstrated end-to-end on one engine
+  on 2026-08-31.
 
-Both halves are demonstrated. They are **not demonstrated end-to-end on one
-engine**, and nothing here claims one engine did both — so the managed actor path
-and the governed egress path should be read as two proofs, not as one continuous
-one. [`EVIDENCE.md`](EVIDENCE.md) tags each managed row with the engine it came
-from; why the two were not converged is in
+**Converged, 2026-08-31.** Engine C — `6110651869841850368`
+(`harbor-converged`) — runs the actor **and** is Gateway-bound: a real
+Gemini 3.5 Flash executed `run_shift` end-to-end on it, with model-plane,
+telemetry, credential and Firestore egress all traversing `harbor-egress-gw`
+against registered endpoints holding per-endpoint `iap.egressor` grants. The
+verifier accepted and committed on that engine
+([`geap/d2_converged_accept.json`](geap/d2_converged_accept.json)), the stale
+control was refused on the same engine
+([`geap/d2_converged_control.json`](geap/d2_converged_control.json)), and the
+gateway's own records for the window are all `ALLOWED`/200
+([`geap/gw_logs_converged.json`](geap/gw_logs_converged.json)). The
+convergence was reached denial-first: every destination was first named by a
+gateway refusal ([`geap/gw_logs_converged_probe.json`](geap/gw_logs_converged_probe.json))
+and only then registered and bound — nothing reached the actor's world until
+the control plane was explicitly told it could.
+
+[`EVIDENCE.md`](EVIDENCE.md) tags each managed row with the engine it came
+from; the original two-proof record and the convergence procedure are in
 [`docs/GEAP_D0_D1.md`](docs/GEAP_D0_D1.md).
 
 ### What each check proves

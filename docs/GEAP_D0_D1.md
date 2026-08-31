@@ -257,8 +257,10 @@ The weather record it wrote keeps `location.latitude`, `location.longitude` and
   AI and Firestore included, has to be registered and bound before one engine
   can do both jobs. That is the concrete reason the halves are split, not a
   reluctance to combine them.
-- **The two halves run on two engines: this is not demonstrated end-to-end on
-  one engine.** Engine A (`3244216260136796160`) carries no gateway binding, has
+- **The two halves run on two engines: at the time of this record, this was
+  not demonstrated end-to-end on one engine.** *(Superseded 2026-08-31 — see
+  the convergence addendum at the end of this document. The paragraph below
+  stands as the accurate record of the state it describes.)* Engine A (`3244216260136796160`) carries no gateway binding, has
   token sharing on, and reaches Firestore. The governed-egress half is
   gateway-bound and runs no actor — first on `4557684054584983552`, which also
   had token sharing on, and after rotation on Engine B (`2414533581910048768`).
@@ -356,3 +358,33 @@ to discover them by reading the artifacts.
   (`opentelemetry-instrumentation-grpc`, `-httpx`, `-google-genai`). Cloud Trace
   still receives spans from Agent Runtime itself; Harbor authored no
   instrumentation and does not claim OpenTelemetry as an integration.
+
+
+## Addendum: the convergence (2026-08-31)
+
+The limitation above was closed exactly the way it predicted. A new engine,
+`harbor-converged` (`6110651869841850368`), was deployed with the actor app,
+Agent Identity, token sharing for GCP services, and a binding to
+`harbor-egress-gw` (`geap/d2_deployed_converged.json`). Its first invocation
+was refused by the gateway — *"unregistered in the Agent Registry"* — and the
+convergence proceeded denial-first from there: each destination the actor
+path needs was named by a gateway refusal, then registered in the Agent
+Registry and bound with a per-endpoint `roles/iap.egressor` grant for the
+engine's Agent Identity. The sequence the gateway dictated:
+`iamcredentials.mtls.googleapis.com`, then `telemetry.mtls.googleapis.com`
+and the mTLS model-plane hosts (`aiplatform.mtls.googleapis.com`,
+`us-central1-aiplatform.mtls.googleapis.com`), with
+`firestore.googleapis.com` and `aiplatform.googleapis.com` registered
+alongside. The initial denials are preserved in
+`geap/gw_logs_converged_probe.json`.
+
+With the bindings in place, `run_shift` completed end-to-end on the
+converged engine: `gemini-3.5-flash` server-reported, the five bounded
+tools, the verifier accepting and committing `harbor-agent-plan-1`
+(`geap/d2_converged_accept.json`), and the stale control refused on the same
+engine — *"stale: plan bound to revision 0, world is at revision 1"*, nothing
+committed (`geap/d2_converged_control.json`). The gateway's own records for
+the window are all `ALLOWED`/200, attributed to the newly registered
+endpoints (`geap/gw_logs_converged.json`). Engines A and B stand above as
+the original record; the deny control (`harbor-cargo-ops`, no bindings) was
+not touched.

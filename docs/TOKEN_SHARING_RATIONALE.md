@@ -34,7 +34,7 @@ managed actor itself ran on a third engine, `3244216260136796160`, which is not
 Gateway-bound. Nothing here shows one engine doing both: the actor path and the
 governed-egress path are **not demonstrated end-to-end on one engine**, and the
 argument in this document does not depend on their being the same engine — it is
-about what the flag does and does not relax on whichever engine holds it.
+about what the flag does and does not relax on whichever engine holds it. *(Superseded 2026-08-31: engine `6110651869841850368` converged the two halves end-to-end — see `docs/GEAP_D0_D1.md`'s addendum; this paragraph records the pre-convergence state.)*
 
 ## Evidence 1: the identity is what Google issued, read from the control plane
 

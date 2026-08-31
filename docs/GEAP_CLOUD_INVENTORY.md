@@ -170,7 +170,7 @@ Two engines in the tables above carry the submitted managed proofs, and they are
 - **Engine B — `2414533581910048768`.** The governed-egress proof: gateway-bound,
   holding `iap.egressor` on the weather endpoint only. It runs **no** actor.
 
-**This is not demonstrated end-to-end on one engine.** Engine A is not
+**At the time of this inventory this was not demonstrated end-to-end on one engine.** *(Superseded 2026-08-31: engine `6110651869841850368` converged the two halves — see `docs/GEAP_D0_D1.md`'s addendum. The paragraph below records the pre-convergence state accurately.)* Engine A is not
 gateway-bound; Engine B does not run the actor. Converging them requires the
 actor path's Google API dependencies to be reachable through the governed egress
 configuration. That work was stopped deliberately and is not claimed. Any reading

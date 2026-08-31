@@ -1,0 +1,386 @@
+[
+  {
+    "httpRequest": {
+      "latency": "0.235900s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "6311",
+      "requestUrl": "https://telemetry.mtls.googleapis.com/v1/traces",
+      "responseSize": "306",
+      "serverIp": "192.179.16.95:443",
+      "status": 200,
+      "userAgent": "Vertex-Agent-Engine/2.0.1 OTel-OTLP-Exporter-Python/1.42.1"
+    },
+    "insertId": "hjisfcezgfk6",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-e1ee-56f367469230"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "telemetry.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "telemetry.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "telemetry.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:21:07.816353486Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:21:00.833499Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "2.223133s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "15427",
+      "requestUrl": "https://aiplatform.mtls.googleapis.com/v1beta1/projects/harbor-storm-fleet/locations/global/publishers/google/models/gemini-3.5-flash:generateContent",
+      "responseSize": "1371",
+      "serverIp": "74.125.132.95:443",
+      "status": 200,
+      "userAgent": "google-genai-sdk/2.20.0 gl-python/3.12.13 google-adk/2.8.0+remote_reasoning_engine gl-python/3.12.13"
+    },
+    "insertId": "hjisfcezgfk5",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-00f8-11a1db71e507"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "aiplatform.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "aiplatform.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "aiplatform.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:21:07.816353486Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:20:56.975413Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.199039s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "4264",
+      "requestUrl": "https://telemetry.mtls.googleapis.com/v1/traces",
+      "responseSize": "305",
+      "serverIp": "192.179.16.95:443",
+      "status": 200,
+      "userAgent": "Vertex-Agent-Engine/2.0.1 OTel-OTLP-Exporter-Python/1.42.1"
+    },
+    "insertId": "1lhmyvkex4iec",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-e1ee-56f367469230"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "telemetry.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "telemetry.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "telemetry.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:20:57.274705856Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:20:55.629604Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "3.718896s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "13079",
+      "requestUrl": "https://aiplatform.mtls.googleapis.com/v1beta1/projects/harbor-storm-fleet/locations/global/publishers/google/models/gemini-3.5-flash:generateContent",
+      "responseSize": "2250",
+      "serverIp": "74.125.132.95:443",
+      "status": 200,
+      "userAgent": "google-genai-sdk/2.20.0 gl-python/3.12.13 google-adk/2.8.0+remote_reasoning_engine gl-python/3.12.13"
+    },
+    "insertId": "1lhmyvkex4ied",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-00f8-11a1db71e507"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "aiplatform.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "aiplatform.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "aiplatform.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:20:57.274705856Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:20:52.539444Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.184481s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "6027",
+      "requestUrl": "https://telemetry.mtls.googleapis.com/v1/traces",
+      "responseSize": "305",
+      "serverIp": "192.179.16.95:443",
+      "status": 200,
+      "userAgent": "Vertex-Agent-Engine/2.0.1 OTel-OTLP-Exporter-Python/1.42.1"
+    },
+    "insertId": "1lhmyvkex4iea",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-e1ee-56f367469230"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "telemetry.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "telemetry.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "telemetry.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:20:57.274705856Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:20:50.442352Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "4.872009s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "7.0.2.2:1026",
+      "requestMethod": "POST",
+      "requestSize": "9813",
+      "requestUrl": "https://aiplatform.mtls.googleapis.com/v1beta1/projects/harbor-storm-fleet/locations/global/publishers/google/models/gemini-3.5-flash:generateContent",
+      "responseSize": "2998",
+      "serverIp": "74.125.132.95:443",
+      "status": 200,
+      "userAgent": "google-genai-sdk/2.20.0 gl-python/3.12.13 google-adk/2.8.0+remote_reasoning_engine gl-python/3.12.13"
+    },
+    "insertId": "1lhmyvkex4ieb",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "agentGatewayInfo": {
+        "agentRegistryResource": "projects/801248256447/locations/us-central1/endpoints/agentregistry-00000000-0000-0000-00f8-11a1db71e507"
+      },
+      "authzPolicyInfo": {
+        "policies": [
+          {
+            "name": "projects/293694721962/locations/us-central1/authzPolicies/harbor-iap-request-authz",
+            "result": "ALLOWED"
+          }
+        ],
+        "result": "ALLOWED"
+      },
+      "enforcedGatewaySecurityPolicy": {
+        "hostname": "aiplatform.mtls.googleapis.com",
+        "matchedRules": [
+          {
+            "action": "ALLOWED",
+            "name": "default_denied"
+          }
+        ],
+        "requestWasTlsIntercepted": true,
+        "serverNameIndication": "aiplatform.mtls.googleapis.com"
+      },
+      "mtls": {
+        "clientCertChainVerified": "false",
+        "clientCertError": "client_cert_validation_not_performed",
+        "clientCertPresent": "true",
+        "clientCertSha256Fingerprint": "tG0dPlEH7p7UIKvqfAWwUi8jL7Wm1wFu61XGX9Kyy8c",
+        "clientCertValidEndTime": "1970-01-01T00:00:00Z",
+        "clientCertValidStartTime": "1970-01-01T00:00:00Z"
+      },
+      "tlsSniHostname": "aiplatform.mtls.googleapis.com"
+    },
+    "logName": "projects/harbor-storm-fleet/logs/networkservices.googleapis.com%2Fgateway_requests",
+    "receiveTimestamp": "2026-08-31T06:20:57.274705856Z",
+    "resource": {
+      "labels": {
+        "gateway_name": "harbor-egress-gw",
+        "gateway_type": "SECURE_WEB_GATEWAY",
+        "location": "us-central1",
+        "network_name": "projects/i18f2d9aef29a723cp-tp/global/networks/uk1-25feb-2-vpc4",
+        "resource_container": "801248256447"
+      },
+      "type": "networkservices.googleapis.com/Gateway"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-08-31T06:20:47.383341Z"
+  }
+]
