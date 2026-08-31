@@ -31,6 +31,9 @@ sentinel, ReliefRun, the portal) — see the provenance rows below.
 |---|---|---|---|
 | HarborWindow is the flagship | the demo scenario, and the one the narrative is built on | [`docs/WHY_HARBOR.md`](docs/WHY_HARBOR.md) | COMMITTED |
 | StormSlot is transfer evidence | the substrate is not specific to one workflow — both scenarios pass the same gates | `.venv/bin/python -m app.gate` → both `5/5 mechanical, SURVIVES` | LOCAL |
+| ReliefFleet is the multi-mission instantiation *(added 2026-08-31)* | many missions, few vehicles: the committed plan is the whole fleet assignment; a failed bridge or hazard pulse revokes it and the fleet reallocates; vehicles are claimable by distinct teams; edge state derives from the durable trace, never mutated facts | `tests/test_relieffleet.py`; `.venv/bin/python -m app.fleet_demo --disrupt --pretty` | LOCAL |
+| Seismic is a second evidence stream *(added 2026-08-31)* | a threshold quake maps to edge alerts under declared policy and revokes through the same verifier, deduplicated by USGS event id; seeded mock is the reference, live USGS FDSN adapter is the upgrade | `app/providers/seismic.py`; `tests/test_seismic.py` | LOCAL + LIVE |
+| The live run operated unattended overnight | ~19 scheduler-driven observations against real weather: `PLAN_REBOUND` + `COMMIT_REAFFIRMED` each cycle, one revocation, redeliveries absorbed — 132 events on the durable trace of run `relief-live-1` | [`geap/relief_live_1_trace_snapshot.json`](geap/relief_live_1_trace_snapshot.json) *(captured 2026-08-31; the run is live and keeps growing)* | COMMITTED + LIVE |
 | ReliefRun is the third instantiation *(added 2026-08-30)* | the mapping is direct — hazard-gated corridor, convoy windows, hospital beds — and nothing in the membrane changed to carry it; deliberately outside `app.gate` | `tests/test_reliefrun.py` (membrane assertions incl. calm-forecast negative control); `.venv/bin/python -m app.relief_demo --disrupt --pretty` | LOCAL |
 
 ## The actor, and the authority it does not have  ·  ENGINE A
@@ -125,12 +128,15 @@ number gets quoted.
 ## Reproduce the local half in about a minute
 
 ```bash
-.venv/bin/python -m pytest tests -q                    # 287 passed, 47 skipped
+.venv/bin/python -m pytest tests -q                    # 314 passed, 47 skipped
 .venv/bin/python -m app.gate                           # both scenarios 5/5, SURVIVES
 .venv/bin/python -m app.demo harborwindow --pretty     # 16-line trace, COMMITTED -> harbor-plan-2
 .venv/bin/python -m app.demo stormslot --pretty        # 16-line trace, COMMITTED -> stormslot-plan-2
 .venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2
                                                        # wall-clock ticks: COMMIT_REVOKED -> replan -> harbor-plan-3
+.venv/bin/python -m app.fleet_demo --disrupt --pretty  # fleet: bridge fails + surge, assignment revoked,
+                                                       # reallocated -> fleet-r1-p3
+.venv/bin/python -m app.metrics relieffleet --disrupt  # coordination numbers folded from the trace
 .venv/bin/python -m app.relief_demo --disrupt --pretty # third instantiation: barrier-lake alert revokes the
                                                        # committed mission, re-commits -> relief-r1-p3
 ```

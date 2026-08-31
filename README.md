@@ -85,12 +85,14 @@ python3.12 -m venv .venv          # or any python >= 3.11
 
 | command | expected output | time |
 |---|---|---|
-| `.venv/bin/python -m pytest tests -q` | `287 passed, 47 skipped` | ~1.2s |
+| `.venv/bin/python -m pytest tests -q` | `314 passed, 47 skipped` | ~1.2s |
 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES`<br>`harborwindow — 5/5 mechanical gates, SURVIVES` | ~0.1s |
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.sentinel harborwindow --ticks 3 --interval 0 --disrupt-at-tick 2` | tick 1 `unchanged`; tick 2 `CHANGED -> applied` with `COMMIT_REVOKED` then `PLAN_COMMITTED -> harbor-plan-3`; tick 3 `unchanged` | ~0.1s |
 | `.venv/bin/python -m app.relief_demo --disrupt --pretty` | 34-event trace ending `COMMITTED -> relief-r1-p3` — see [ReliefRun](#the-third-instantiation-reliefrun) | ~0.1s |
+| `.venv/bin/python -m app.fleet_demo --disrupt --pretty` | 25-event trace: naive board refused, fleet committed, bridge fails + surge pulse, assignment revoked, reallocated — `COMMITTED -> fleet-r1-p3` | ~0.1s |
+| `.venv/bin/python -m app.metrics relieffleet --disrupt` | coordination numbers folded from the trace: 1 revocation with its quoted reason, reallocation span, absorbed redeliveries | ~0.1s |
 
 **About the 47 skips.** All 47 are the same suite —
 `tests/test_store_contract.py`, which runs one store contract against both the
@@ -205,11 +207,11 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-Expected: `334 passed` with **none skipped** — the emulator turns the 47 skips
+Expected: `361 passed` with **none skipped** — the emulator turns the 47 skips
 above into passes. Measured on 2026-08-28 against the frozen tree
 (engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in
-14.3s; measured again on 2026-08-30 with the sentinel and ReliefRun suites
-included: `334 passed` in 14.2s.
+14.3s; measured again on 2026-08-31 with the sentinel, ReliefRun, portal and
+ReliefFleet suites included: `361 passed` in 113s.
 The same contract runs against both backends, so the in-memory store and
 Firestore cannot drift on the question that decides whether a write is
 authoritative.
@@ -277,6 +279,9 @@ from; why the two were not converged is in
 | `test_claim_contention.py` | losing a claim and failing to resolve one are different outcomes |
 | `test_live_gate.py` | the seeded lane cannot reach the network |
 | `test_sentinel.py` | commitment does not end scrutiny: a changed observation revokes and replans through the verifier, applies at most once across restarts, and the sentinel itself holds no authority |
+| `test_relieffleet.py` | the fleet assignment is one candidate: slot reuse, double assignment, missing missions and bed overruns refused; a bridge failure or hazard pulse revokes the committed assignment and the fleet reallocates; edge state derives from the trace, never from mutated facts |
+| `test_seismic.py` | a second evidence stream: a threshold quake maps to edge alerts under declared policy, revokes through the verifier, and the same USGS event id can never apply twice |
+| `test_metrics.py` | the coordination numbers are a pure fold over the trace |
 | `test_reliefrun.py` | the third instantiation passes the same membrane assertions: calm-forecast negative control, named-reason refusals, verify-before-commit, post-commit revocation, deterministic replay, disjoint actor scopes |
 | `test_portal.py` | the web lane keeps the contracts: at-most-once observation under redelivery, verifier-only authority, the frozen app served unchanged underneath, and the seeded control refused on the live lane |
 | `test_log_scrubber.py` | evidence capture redacts credentials before writing, and fails closed |
@@ -341,6 +346,50 @@ clock (for example a Cloud Scheduler job calling
 `POST /relief/runs/<id>/observe`) can re-verify the standing mission on real
 time and a redelivered observation applies at most once.
 
+## From one mission to a fleet: ReliefFleet
+
+Added 2026-08-31, on the same membrane. Three relief missions compete for two
+trucks and one helicopter across shared convoy windows, a shared hospital-bed
+pool, and a road network whose edges can fail. The candidate plan is the
+**fleet assignment** — every mission mapped to a vehicle and a window — so one
+committed plan is the fleet's operational truth, revision-fenced like any
+other plan. Trucks and the helicopter fail on different physics (water on the
+road vs wind aloft), and a failed bridge cuts every truck route that crosses
+it.
+
+```bash
+.venv/bin/python -m app.fleet_demo --disrupt --pretty
+```
+
+The naive board (everything at first light) is refused on a named reason; the
+planner reallocates and the fleet commits. Then the second surge lands — a
+barrier-lake pulse floods the truck windows while a bridge fails — and the
+committed assignment is revoked by the verifier; in the reallocation the
+bridge village flies in the same window and the helicopter takes a second
+sortie at noon. Two agencies cannot hold the same vehicle: each vehicle is a
+claimable work item held by a distinct team, a rival claim is refused on the
+record naming the holder, and the verifier independently rejects any
+assignment that reuses a (vehicle, window) slot.
+
+Two design points, both auditor-driven: **edge state is derived from the
+record** — a failure is an `EDGE_FAILED` event folded over the seeded
+baseline (`current_edges`), never a mutation of facts, so no backend can
+silently lose a disruption on re-read; and plan ids are revision-qualified
+(`fleet-r1-p3`), so the trace never holds one id naming two proposals.
+
+**A second evidence stream: seismic.** `app/providers/seismic.py` carries a
+seeded mock (the deterministic reference) and a live USGS FDSN adapter
+(public, no key). A quake at or above a declared threshold maps to edge
+alerts under policy — the provider never touches the store; the alerts enter
+as `EDGE_FAILED` evidence and the verifier decides what survives, deduplicated
+by USGS event id. `tests/test_seismic.py` runs the end-to-end: quake → edge
+failure → committed assignment revoked → helicopter reallocation.
+
+**Numbers a coordinator would ask for** fold straight off the trace
+(`app/metrics.py`): revocations with their quoted reasons, reallocation span,
+refused double-allocations, absorbed redeliveries — no instrumentation,
+because the trace is the record.
+
 ## Frozen core
 
 This repository is a snapshot of a frozen tree, published without its
@@ -374,8 +423,11 @@ left to be re-derived:
   frozen code: the managed-runtime adapter `app/geap/` with
   `tests/test_log_scrubber.py`, the wall-clock re-observation harness
   `app/sentinel.py` with `tests/test_sentinel.py`, the ReliefRun
-  instantiation with `tests/test_reliefrun.py`, and the portal with
-  `tests/test_portal.py`. No frozen file was modified to make any of them
+  instantiation with `tests/test_reliefrun.py`, the portal with
+  `tests/test_portal.py`, and the ReliefFleet instantiation
+  (`app/scenarios/relieffleet.py`, `app/fleet_demo.py`, `app/metrics.py`,
+  `app/providers/seismic.py`) with its three test suites, added at
+  engineering SHA `691c1fc`. No frozen file was modified to make any of them
   work — the sentinel drives the frozen `disrupt()` path and holds no
   authority of its own, ReliefRun reuses the frozen membrane without being
   wired into `app.demo`, `app.gate` or the API, and the portal mounts the

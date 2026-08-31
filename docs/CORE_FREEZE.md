@@ -206,8 +206,8 @@ KNOWN_FAILURES       none
 ```
 
 Those two test counts are the counts **at `cf91551`**, not the counts a judge
-will see today. The submitted tree reports 287 passed, 47 skipped in memory and
-334 passed, 0 skipped against the Firestore emulator; the difference is the
+will see today. The submitted tree reports 314 passed, 47 skipped in memory and
+361 passed, 0 skipped against the Firestore emulator; the difference is the
 additive work named above plus the wall-clock sentinel (`app/sentinel.py` with
 `tests/test_sentinel.py`) and the ReliefRun instantiation
 (`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`)
