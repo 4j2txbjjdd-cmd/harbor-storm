@@ -474,10 +474,11 @@ coordination architecture is not specific to one workflow.
 
 The submitted managed path uses Google Agent Runtime, Agent Identity,
 Agent Gateway, Agent Registry, Gemini, Firestore, Google Weather,
-Identity-Aware Proxy, and Google Cloud IAM. These surfaces are demonstrated as
-two proofs on two engines — the actor on one, governed egress on the other, as
-set out in [Reproduce it](#reproduce-it) — and no single engine demonstrates
-the combined path.
+Identity-Aware Proxy, and Google Cloud IAM. These surfaces were first
+demonstrated as two proofs on two engines — the actor on one, governed egress
+on the other — and converged on 2026-08-31: engine `6110651869841850368`
+demonstrates the combined path end-to-end, as set out in
+[Reproduce it](#reproduce-it).
 
 Earlier exploration considered Cloud Run, Pub/Sub, Google Routes, and other
 extensions. As of 2026-08-30, Cloud Run is exercised after all: it hosts the
