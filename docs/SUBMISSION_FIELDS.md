@@ -26,13 +26,14 @@ keyless) — all additive, all on the same membrane.*
 
 ---
 
-## Built With — 23 tags
+## Built With — 22 tags
 
 Devpost asks for implementation technology, capped at 25 tags. Each tag below is
 exercised in the path being submitted: rows 1–18 as checked on 2026-08-28, and
-five added with the live lane on 2026-08-30 — Cloud Run (19), Cloud Build (20),
-Artifact Registry (21, reinstated below), Cloud Scheduler (22), and the live
-Weather lane (23).
+four added with the live lane — Cloud Run (19), Cloud Build (20), Artifact
+Registry (21, reinstated; original drop analysis preserved below), and
+Cloud Scheduler (22). The deployed live-weather lane is part of row 11, not a
+separate technology.
 
 | # | tag | what makes it true |
 |---|---|---|
@@ -42,22 +43,22 @@ Weather lane (23).
 | 4 | `Vertex AI` | `vertexai.Client(...)` in `geap/d1_invoke.py`; `GOOGLE_GENAI_USE_VERTEXAI=true` on the probe path; `aiplatform.googleapis.com` enabled |
 | 5 | `Agent Runtime` | live Reasoning Engines in `us-central1`; the original actor proof ran on `3244216260136796160` and governed egress on `2414533581910048768` — and since 2026-08-31 the **converged engine `6110651869841850368` demonstrates the combined path end-to-end**: the actor executes with every egress Gateway-governed (`geap/d2_converged_accept.json`) |
 | 6 | `Agent Identity` | control-plane GET on the engine returns `identityType: AGENT_IDENTITY` with **no** `serviceAccount` key and an engine-bound `effectiveIdentity` (`geap/d0_readback.json`) |
-| 7 | `Agent Gateway` | `harbor-egress-gw` governs engine B and the converged engine `6110651869841850368`, whose actor traffic (model plane, telemetry, credentials, Firestore) it carried as `ALLOWED`/200 against registered endpoints (`geap/gw_logs_converged.json`); the original actor engine `3244216260136796160` remains unbound as the historical control |
+| 7 | `Agent Gateway` | `harbor-egress-gw` governs engine B and the converged engine `6110651869841850368`; captured `ALLOWED`/200 records cover its model-plane and telemetry egress (`geap/gw_logs_converged.json`) and its Firestore egress attributed to `harbor-state-store` (`geap/gw_logs_converged_firestore.json`); credential egress is denial-proven pre-binding with success inferred from the completed run; the original actor engine `3244216260136796160` remains unbound as the historical control |
 | 8 | `Agent Registry` | eight registered services returned live by `agentregistry.googleapis.com`: the original `harbor-weather` and `harbor-cargo-ops`, plus the six actor-path destinations registered denial-first during the 2026-08-31 convergence. Registration is not an authorization allowlist — `harbor-cargo-ops` is registered and still denied; per-endpoint IAP IAM is what authorizes egress |
 | 9 | `Google Cloud` | project `harbor-storm-fleet` (`801248256447`) |
 | 10 | `Cloud Firestore` | `google-cloud-firestore==2.29.0`; authoritative store; independent readback of run `geap-d1-shift-4` returns `committed_plan_id = harbor-agent-plan-1` |
-| 11 | `Google Weather API` | `weather.googleapis.com` is the registered endpoint that also carries `roles/iap.egressor`, so it is the destination egress is authorized to reach; 200 with a real forecast and `server: ESF` in `geap/d1_egress_rotated.json`; also the live weather lane (`app.live_gate`) |
+| 11 | `Google Weather API` | `weather.googleapis.com` is the registered endpoint that also carries `roles/iap.egressor`, so it is the destination egress is authorized to reach; 200 with a real forecast and `server: ESF` in `geap/d1_egress_rotated.json`; also the live weather lane (`app.live_gate`), and the deployed service itself: `WEATHER_PROVIDER=google` with real Rasuwa-region coordinates via `SITES_JSON` (`/relief/config` reports them), scheduler-observed against real forecasts |
 | 12 | `Identity-Aware Proxy` | `roles/iap.egressor` on the weather endpoint; denials carry `x-goog-iap-generated-response: true`; authz extension `harbor-iap-authz` targets `service: iap.googleapis.com` |
 | 13 | `Google Cloud IAM` | in the captured policy read, filtered to the agent-identity trust domain, `roles/aiplatform.user` is bound to seven per-engine `principal://` members and nothing else, and `roles/datastore.user` to those same seven; the unfiltered project policy adds a pre-existing compute service account on `roles/datastore.user` that Harbor did not grant. Neither Harbor-granted role carries a `principalSet` or a project-wide role. `roles/iap.egressor` granted per engine on one registry endpoint only |
 | 14 | `Google Cloud Network Security` | `networksecurity.googleapis.com` holds authzPolicy `harbor-iap-request-authz` (`action: CUSTOM`) targeting `harbor-egress-gw` |
 | 15 | `Google Cloud Network Services` | `networkservices.googleapis.com` holds authzExtension `harbor-iap-authz` (`iapPolicyVersion: V1`, `timeout: 1s`) |
 | 16 | `Cloud Logging` | Google's own gateway decisions (`geap/gw_logs_rotated.json`) and the Firestore IAM enforcement legs (`geap/firestore_iam_enforcement_legs.json`) are read from Cloud Logging |
 | 17 | `GitHub` | `4j2txbjjdd-cmd/harbor-storm` — the repository this submitted tree is published from, and the one the reproduce commands below clone. Development history is kept in a separate private engineering repository; what is published here is the frozen submitted tree, not that history |
-| 18 | `pytest` | `pytest==9.1.1`; 314 passing tests |
+| 18 | `pytest` | `pytest==9.1.1`; 315 passing tests |
 | 19 | `Cloud Run` | service `harbor-storm` in `us-central1` serving the portal publicly at <https://harbor-storm-801248256447.us-central1.run.app> (deployed 2026-08-30); one pinned instance per `deploy/service.yaml`'s trace-ordering rationale; Firestore-durable runs (database `harbor`) |
 | 20 | `Cloud Build` | built images `…/harbor/harbor-storm:portal-5bf0794` (2026-08-30) and `portal-c75a6f8` (2026-08-31 — the one the service currently runs) from the submitted tree |
-| 22 | `Cloud Scheduler` | job `relief-observe` (`*/30 * * * *`, ENABLED, `us-central1`) re-observes the standing ReliefRun mission on the deployed service; observations are content-addressed, so a redelivery applies at most once |
-| 23 | `Google Weather API (live lane)` | the deployed service runs `WEATHER_PROVIDER=google` with real Rasuwa-region coordinates via `SITES_JSON` (`/relief/config` reports them); first live observation re-verified the standing commitment against a real forecast (severe hours `[]` at capture — the commitment survived, which is the honest outcome of calm weather) |
+| 21 | `Artifact Registry` | the deployed Cloud Run service pulls `…/harbor/harbor-storm:portal-c75a6f8` from the `harbor` repository — reinstated 2026-08-30 after being dropped; the original drop analysis is preserved below |
+| 22 | `Cloud Scheduler` | job `relief-observe` (`*/30 * * * *`, ENABLED, `us-central1`) re-observes the standing ReliefRun mission on the deployed service; observations are content-addressed, so a redelivery applies at most once — the trace snapshot's seq-135 clock revocation is one of its deliveries |
 
 ### Dropped after investigation
 
@@ -156,9 +157,10 @@ Put this on the form, and say it out loud in the video. It costs nothing and it
 is the sentence that makes the rest of the claims credible:
 
 > The combined actor-plus-Gateway path is demonstrated end-to-end on one
-> engine (`6110651869841850368`, converged 2026-08-31): the actor's every
-> egress — model plane, telemetry, credentials, Firestore — traverses the
-> Gateway against registered, egressor-bound endpoints.
+> engine (`6110651869841850368`, converged 2026-08-31). Captured Gateway
+> `ALLOWED` records cover the model-plane, telemetry and Firestore egress of
+> those runs; credential egress is denial-proven pre-binding, with its
+> success inferred from the completed run rather than a captured record.
 
 The convergence did exactly what the earlier limitation said it would
 require: the actor path's Google API dependencies were registered as egress
@@ -259,7 +261,7 @@ checklist a Fleet judge will hold the submission against.
 - **Memory Bank.** Harbor's invariant is *session memory is not authoritative;
   the store and the event log are.* Cross-session context that cannot be
   re-verified is exactly what the membrane exists to distrust. Persistent
-  state is Firestore, one contract on both backends (`361 passed`, none
+  state is Firestore, one contract on both backends (`362 passed`, none
   skipped).
 - **Model Armor.** Its purpose is guardrails against prompt injection and
   tool poisoning. Harbor contains that threat class structurally: the
@@ -292,7 +294,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 | # | command | expected output |
 |---|---|---|
-| 1 | `.venv/bin/python -m pytest tests -q` | `314 passed, 47 skipped` (~1.2s) |
+| 1 | `.venv/bin/python -m pytest tests -q` | `315 passed, 47 skipped` (~1.2s) |
 | 2 | `.venv/bin/python -m pytest tests/test_live_gate.py -q` | `11 passed` |
 | 3 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES` and `harborwindow — 5/5 mechanical gates, SURVIVES` |
 | 4 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` |
@@ -320,13 +322,13 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
 
 | # | command | measured |
 |---|---|---|
-| 8 | the emulator run above | `361 passed`, none skipped, 113s (measured 2026-08-31 with all additive suites; 2026-08-28 pre-sentinel: `305 passed`) |
+| 8 | the emulator run above | `362 passed`, none skipped (re-measured 2026-08-31 after the audit fixes; first measured 361 in 113s cold; 2026-08-28 pre-sentinel: `305 passed`) |
 
 **The 47 skips are one cause, not 47 problems.** Every one is
 `tests/test_store_contract.py: set FIRESTORE_EMULATOR_HOST to run` — the same
 store contract run against the Firestore backend, which skips without an
-emulator. Under the emulator all 361 pass with nothing skipped, and that was
-actually run on the submitted tree rather than inferred from 314 + 47. Say this
+emulator. Under the emulator all 362 pass with nothing skipped, and that was
+actually run on the submitted tree rather than inferred from 315 + 47. Say this
 before a judge asks.
 
 **Frozen-core integrity**, the one that answers "did you rewrite the core to make

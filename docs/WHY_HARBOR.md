@@ -33,7 +33,7 @@ if one model could technically ingest everything.**
 | **information scope** | the forecast, the manifest and the schedule live in three organisations and three systems; each actor reads only its own facts |
 | **action scope** | each actor claims only its own unit of work — `window`, `load`, `slot` — and cannot act inside another's |
 | **authority domain** | the harbourmaster does not get to assert that the weather is safe; the shipper does not get to assert that a berth is free. Neither does a model that has read all three |
-| **identity / policy boundary** | a managed actor runs under a Google-issued Agent Identity, and what an agent identity may reach is decided by IAM and the Gateway rather than by the code it is running. Demonstrated as two separate proofs on two engines — the actor on one, governed egress on the other, not end-to-end on either, and not for all three actors — see [`EVIDENCE.md`](../EVIDENCE.md) |
+| **identity / policy boundary** | a managed actor runs under a Google-issued Agent Identity, and what an agent identity may reach is decided by IAM and the Gateway rather than by the code it is running. First demonstrated as two separate proofs on two engines, then converged on 2026-08-31: engine `6110651869841850368` is gateway-bound and runs the actor end-to-end (not for all three actors) — see [`EVIDENCE.md`](../EVIDENCE.md) |
 
 Collapsing those into one agent does not simplify the problem. It manufactures an
 authority that does not exist in the real operation, and it is the first thing an

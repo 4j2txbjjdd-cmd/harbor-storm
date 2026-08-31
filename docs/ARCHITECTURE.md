@@ -31,9 +31,15 @@ since moved on.
 
 ## Primary diagram
 
-Harbor's managed evidence is **two proofs on two Reasoning Engines**, not one
-end-to-end run. The diagram says so explicitly, because the honest version is
-still strong and the dishonest version is checkable in a minute.
+Harbor's managed evidence was built as **two proofs on two Reasoning Engines**,
+and on **2026-08-31 the split was converged**: engine **C**,
+`6110651869841850368` (`harbor-converged`), is gateway-bound *and* runs the
+actor end-to-end — accept and stale-control runs, with the Gateway's own
+ALLOWED records (`geap/d2_converged_accept.json`,
+`geap/d2_converged_control.json`, `geap/gw_logs_converged.json`,
+`geap/d2_deployed_converged.json`). Engines A and B remain in the diagram as
+the original, more granular proofs — each control was first demonstrated in
+isolation, which is why the converged run is attributable at all.
 
 ```mermaid
 flowchart TD
@@ -48,7 +54,7 @@ flowchart TD
 
     OPS --> BOUNDED
 
-    subgraph GEAP["Demonstrated on Google Agent Runtime — TWO engines, TWO separate proofs"]
+    subgraph GEAP["Demonstrated on Google Agent Runtime — two original proofs, converged 2026-08-31"]
 
         subgraph EA["ENGINE A · 3244216260136796160 · actor proof · NOT gateway-bound"]
             GEM["<b>Gemini 3.5 Flash</b><br/>server-reported, reasons from what it read"]
@@ -75,9 +81,9 @@ flowchart TD
     REG -->|"iap.egressor <b>absent</b>"| DENY1["<b>403</b> IAP-generated<br/>before the destination"]
     REG -->|"<b>unregistered</b>"| DENY2["<b>403</b><br/>not in Agent Registry"]
 
-    GAP["<b>Not demonstrated end-to-end on one engine.</b><br/>Engine A carries no gateway binding; Engine B runs no actor.<br/>Converging them needs the actor's Google API dependencies<br/>reachable through the governed egress configuration.<br/><i>That work was stopped deliberately and is not claimed.</i>"]
-    EA -.- GAP
-    EB -.- GAP
+    CONV["<b>ENGINE C · 6110651869841850368 · harbor-converged · 2026-08-31</b><br/>the same gateway-bound engine runs the actor end-to-end:<br/>accept run committed · stale control refused · Gateway ALLOWED records<br/><i>geap/d2_converged_accept.json · d2_converged_control.json · gw_logs_converged.json</i>"]
+    EA -.->|"actor proof, converged onto"| CONV
+    EB -.->|"governance proof, converged onto"| CONV
 
     EA --> PLAN["<b>CandidatePlan</b><br/>bound to the revision the actor observed"]
 
@@ -100,10 +106,11 @@ flowchart TD
     class DENY1,DENY2,STALE,REJ,NOAUTH deny
     class WX,COMMIT allow
     class FS truth
-    class GAP gap
+    class CONV allow
 ```
 
-**Read the split deliberately.** Engine A proves that a real managed Gemini runs
+**Read the split deliberately — it is the provenance of the convergence, not a
+retraction of it.** Engine A proves that a real managed Gemini runs
 Harbor's bounded actor and cannot reach authority: five tools, no verify, no
 commit, a CandidatePlan bound to the revision it observed, and a stale proposal
 refused. Engine B proves that Google — not Harbor and not the model — decides
@@ -127,8 +134,16 @@ identity probe (`geap/d0_readback.json`) and the earlier gateway-bound engine
 claim: one deployment path with the service-account key absent, plus control-plane
 GETs showing the resulting shape on the engines that were captured that way.
 
-Neither proof depends on the other, and **no document or artifact in this
-repository claims a single engine did both.**
+Neither original proof depends on the other. Until 2026-08-31 no document in
+this repository claimed a single engine did both — that restraint was
+deliberate, and it ended only when engine **C** demonstrated it:
+`geap/d2_converged_accept.json` (actor run, verifier commit, Firestore-backed
+state on the gateway-bound engine), `geap/d2_converged_control.json` (the
+stale refusal on the same engine), and `geap/gw_logs_converged.json` (the
+Gateway's ALLOWED records for the model-plane and telemetry egress of those
+runs). What the committed gateway-success log does and does not capture is
+stated precisely in [`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md)'s convergence
+addendum.
 
 ## The two boundaries that carry the claim
 
@@ -178,9 +193,12 @@ drawn that is not proven.
 
 **Which engine proved what.** `A` = engine `3244216260136796160`, the actor proof.
 `B` = engine `2414533581910048768`, the governed-egress proof, which runs **no**
-actor. Rows are tagged so no reader has to infer that one engine did both — it
-did not. A row tagged with neither letter was proved on something else, and says
-what.
+actor. Rows are tagged so no reader has to infer that one engine did both — in
+the rows below, none did: they record the original isolated proofs. The engine
+that *did* do both is `C` = `6110651869841850368` (`harbor-converged`,
+2026-08-31), whose accept, stale-control and gateway records are cited in the
+primary-diagram section above. A row tagged with no letter was proved on
+something else, and says what.
 
 The load-bearing negative — *engine A carries no gateway binding* — is scoped to
 one artifact. `geap/d1_deployed_v4.json` is engine A's deploy record and reads

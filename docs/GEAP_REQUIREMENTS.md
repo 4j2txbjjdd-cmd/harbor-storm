@@ -22,17 +22,24 @@ category a surface falls into.
 
 ### 1. Submitted stack — implemented, exercised, and evidenced
 
-Read this table with the two-engine split in hand, because it is the first thing
-a reader meets and the split is load-bearing:
+Read this table with the engine record in hand, because it is the first thing
+a reader meets:
 
-- **Engine A = `3244216260136796160`** — the managed actor proof. It is **not**
-  gateway-bound.
-- **Engine B = `2414533581910048768`** — the governed-egress proof. It runs **no**
-  actor.
+- **Engine A = `3244216260136796160`** — the original managed actor proof. It
+  is **not** gateway-bound.
+- **Engine B = `2414533581910048768`** — the original governed-egress proof. It
+  runs **no** actor.
+- **Engine C = `6110651869841850368`** (`harbor-converged`, 2026-08-31) — the
+  convergence: the same gateway-bound engine runs the actor end-to-end.
+  Accept and stale-control runs plus the Gateway's ALLOWED records:
+  `geap/d2_converged_accept.json`, `geap/d2_converged_control.json`,
+  `geap/gw_logs_converged.json`, `geap/gw_logs_converged_firestore.json`.
 
-**The complete actor-plus-Gateway path is not demonstrated end-to-end on one
-engine**, and no row below should be read as claiming it is. Why the halves were
-not converged is in [`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md).
+The rows below cite the original A/B artifacts because each control was first
+demonstrated in isolation; **the combined actor-plus-Gateway path is now also
+demonstrated on engine C**. The convergence record, including exactly what its
+committed gateway logs do and do not capture, is in
+[`docs/GEAP_D0_D1.md`](GEAP_D0_D1.md)'s addendum.
 
 | surface | what Harbor demonstrates | evidence |
 |---|---|---|

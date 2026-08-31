@@ -6,8 +6,9 @@ repository publishes a snapshot of the result without that history: it carries
 no tags or branches, and none of the freeze points can be checked out or
 diffed against here. The commits this repository does carry all post-date
 first publication and are the declared additions (prose corrections, the
-sentinel, ReliefRun, the portal — declared later in this document); none of
-them touches a frozen file. Every identifier below is given so the record is
+sentinel, ReliefRun, the portal, ReliefFleet with metrics and the seismic
+stream, and the convergence evidence — declared later in this document);
+none of them touches a frozen file. Every identifier below is given so the record is
 legible, not so it can be re-run.
 
 ```
@@ -90,8 +91,11 @@ withdrawn rather than updated, and why the strings that pointed at it had to go
 with it. The reasoning is set out in full in
 [`docs/WHY_HARBOR.md`](WHY_HARBOR.md).
 
-Everything else in `app/` and `tests/` since `core-freeze-1` is **additive**:
-`app/geap/` and `tests/test_log_scrubber.py`.
+Everything else in `app/` and `tests/` at `submission-freeze-2` is
+**additive**: `app/geap/` and `tests/test_log_scrubber.py`. The additive
+layers added after first publication (sentinel, ReliefRun, portal,
+ReliefFleet, metrics, seismic) are enumerated at the end of this document
+and in `EVIDENCE.md`'s provenance rows.
 
 ## What "frozen" means here
 
@@ -206,8 +210,8 @@ KNOWN_FAILURES       none
 ```
 
 Those two test counts are the counts **at `cf91551`**, not the counts a judge
-will see today. The submitted tree reports 314 passed, 47 skipped in memory and
-361 passed, 0 skipped against the Firestore emulator; the difference is the
+will see today. The submitted tree reports 315 passed, 47 skipped in memory and
+362 passed, 0 skipped against the Firestore emulator; the difference is the
 additive work named above plus the wall-clock sentinel (`app/sentinel.py` with
 `tests/test_sentinel.py`) and the ReliefRun instantiation
 (`app/scenarios/reliefrun.py`, `app/relief_demo.py`, `tests/test_reliefrun.py`)
@@ -234,8 +238,11 @@ each is unstarted or deliberately deferred.
   distinct Reasoning Engines, not one**. Engine `3244216260136796160`
   demonstrates the managed Gemini actor path and is **not** Gateway-bound; engine
   `2414533581910048768` demonstrates governed egress and does **not** run the
-  actor. The combined path was not demonstrated end-to-end on a single engine,
-  and nothing in this repository claims it was. Memory Bank is **not configured**
+  actor. At the time of this record the combined path was not demonstrated
+  end-to-end on a single engine and nothing in the repository claimed it was.
+  *(Superseded 2026-08-31: engine `6110651869841850368` converged the two
+  halves — see `docs/GEAP_D0_D1.md`'s addendum; this paragraph records the
+  pre-convergence state.)* Memory Bank is **not configured**
   and Model Armor is **not deployed** — neither is claimed as implemented
   anywhere in this repository, and no artifact here asserts either. The full
   scope, with what stands in place of each, is
@@ -317,7 +324,9 @@ Chronology, stated:
 - **Later submission work** — the managed control plane was implemented and
   evidenced, HarborWindow was selected as the flagship, and the architecture was
   documented against the real topology. Cloud Run and Pub/Sub did **not** become
-  part of the submitted topology.
+  part of the submitted topology at that point. *(Cloud Run later did — the
+  public portal was deployed 2026-08-30, as an additive layer; the managed
+  Pub/Sub service remains unused.)*
 - **At `submission-freeze-2`** — the submitted tree, which is what this
   repository contains.
 
@@ -342,11 +351,13 @@ the first freeze being quietly moved onto it.
 
 The freeze itself cannot be checked out here: this repository is a single
 snapshot, not a history. What *can* be re-run is the thing the freeze was
-protecting, unchanged — no file under `app/` or `tests/` was modified after
-`submission-freeze-2`:
+protecting, unchanged — no **frozen** file under `app/` or `tests/` has been
+modified since `submission-freeze-2`; the declared additive layers (sentinel,
+ReliefRun, portal, ReliefFleet, metrics, seismic) postdate it and have their
+own revisions:
 
 ```bash
-.venv/bin/python -m pytest tests -q   # 258 passed, 47 skipped
+.venv/bin/python -m pytest tests -q   # 258 passed, 47 skipped at submission-freeze-2; today's tree reports more, all additive
 .venv/bin/python -m app.gate          # both scenarios 5/5 mechanical gates, SURVIVES
 ```
 

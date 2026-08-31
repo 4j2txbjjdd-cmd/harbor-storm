@@ -85,7 +85,7 @@ python3.12 -m venv .venv          # or any python >= 3.11
 
 | command | expected output | time |
 |---|---|---|
-| `.venv/bin/python -m pytest tests -q` | `314 passed, 47 skipped` | ~1.2s |
+| `.venv/bin/python -m pytest tests -q` | `315 passed, 47 skipped` | ~1.2s |
 | `.venv/bin/python -m app.gate` | `stormslot — 5/5 mechanical gates, SURVIVES`<br>`harborwindow — 5/5 mechanical gates, SURVIVES` | ~0.1s |
 | `.venv/bin/python -m app.demo harborwindow --pretty` | 16-line trace ending `COMMITTED -> harbor-plan-2` | ~0.1s |
 | `.venv/bin/python -m app.demo stormslot --pretty` | 16-line trace ending `COMMITTED -> stormslot-plan-2` | ~0.1s |
@@ -207,11 +207,11 @@ PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:exec \
    .venv/bin/python -m pytest tests -q'
 ```
 
-Expected: `361 passed` with **none skipped** — the emulator turns the 47 skips
+Expected: `362 passed` with **none skipped** — the emulator turns the 47 skips
 above into passes. Measured on 2026-08-28 against the frozen tree
 (engineering SHA `687eebfd26f64d87f3c8db49756f838dc90bc02a`): `305 passed` in
 14.3s; measured again on 2026-08-31 with the sentinel, ReliefRun, portal and
-ReliefFleet suites included: `361 passed` in 113s.
+ReliefFleet suites included: `362 passed` in 10s (re-measured after the audit fixes; 113s cold-JVM on first run).
 The same contract runs against both backends, so the in-memory store and
 Firestore cannot drift on the question that decides whether a write is
 authoritative.
@@ -264,15 +264,22 @@ original two-proof record; engine C is their convergence:
 
 **Converged, 2026-08-31.** Engine C — `6110651869841850368`
 (`harbor-converged`) — runs the actor **and** is Gateway-bound: a real
-Gemini 3.5 Flash executed `run_shift` end-to-end on it, with model-plane,
-telemetry, credential and Firestore egress all traversing `harbor-egress-gw`
-against registered endpoints holding per-endpoint `iap.egressor` grants. The
-verifier accepted and committed on that engine
-([`geap/d2_converged_accept.json`](geap/d2_converged_accept.json)), the stale
-control was refused on the same engine
-([`geap/d2_converged_control.json`](geap/d2_converged_control.json)), and the
-gateway's own records for the window are all `ALLOWED`/200
-([`geap/gw_logs_converged.json`](geap/gw_logs_converged.json)). The
+Gemini 3.5 Flash executed `run_shift` end-to-end on it against registered
+endpoints holding per-endpoint `iap.egressor` grants. The verifier accepted
+and committed on that engine
+([`geap/d2_converged_accept.json`](geap/d2_converged_accept.json)), and the
+stale control was refused on the same engine
+([`geap/d2_converged_control.json`](geap/d2_converged_control.json)). The
+Gateway's own captured `ALLOWED`/200 records cover the **model-plane and
+telemetry** egress of those runs
+([`geap/gw_logs_converged.json`](geap/gw_logs_converged.json)) and the
+**Firestore** egress, attributed to the registered `harbor-state-store`
+endpoint
+([`geap/gw_logs_converged_firestore.json`](geap/gw_logs_converged_firestore.json)).
+**Credential egress is the one leg without a captured success record:** it is
+denial-proven pre-binding — the gateway refused `iamcredentials` by name
+before the endpoint was registered and bound — and its success afterward is
+inferred from the completed run, not from a captured log line. The
 convergence was reached denial-first: every destination was first named by a
 gateway refusal ([`geap/gw_logs_converged_probe.json`](geap/gw_logs_converged_probe.json))
 and only then registered and bound — nothing reached the actor's world until
