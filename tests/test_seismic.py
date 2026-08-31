@@ -87,3 +87,20 @@ def test_live_usgs_adapter_is_not_constructible_into_the_seeded_lane(monkeypatch
         lambda *a, **k: (_ for _ in ()).throw(AssertionError(
             "live seismic provider constructed on the seeded lane")))
     test_quake_alert_revokes_the_committed_assignment_through_the_verifier()
+
+
+def test_usgs_query_honors_the_advertised_lookback():
+    """Sol's audit finding, kept as a contract: without an explicit
+    starttime USGS applies its own 30-day default, silently widening the
+    window this adapter claims. No network involved."""
+    from datetime import datetime, timezone
+    from app.providers.seismic import USGSSeismicProvider
+
+    p = USGSSeismicProvider.__new__(USGSSeismicProvider)
+    p.lookback_hours = 24
+    p.timeout = 10.0
+    params = p.query_params(28.03, 85.2, 150.0, 4.0)
+    assert "starttime" in params
+    start = datetime.strptime(params["starttime"], "%Y-%m-%dT%H:%M:%S")
+    age_h = (datetime.now(timezone.utc).replace(tzinfo=None) - start).total_seconds() / 3600
+    assert 23.9 < age_h < 24.1

@@ -19,6 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Protocol
 
 
@@ -64,16 +65,27 @@ class USGSSeismicProvider:
         self.lookback_hours = lookback_hours
         self.timeout = timeout
 
-    def recent(self, latitude: float, longitude: float, radius_km: float,
-               min_magnitude: float) -> List[SeismicEvent]:
-        params = urllib.parse.urlencode({
+    def query_params(self, latitude: float, longitude: float,
+                     radius_km: float, min_magnitude: float) -> Dict[str, str]:
+        """The exact FDSN query, exposed so a test can hold the adapter to
+        its advertised window without touching the network. Without an
+        explicit starttime USGS applies its own default (30 days), which
+        would silently widen the lookback this provider claims."""
+        start = datetime.now(timezone.utc) - timedelta(hours=self.lookback_hours)
+        return {
             "format": "geojson",
             "latitude": f"{latitude}",
             "longitude": f"{longitude}",
             "maxradiuskm": f"{radius_km}",
             "minmagnitude": f"{min_magnitude}",
+            "starttime": start.strftime("%Y-%m-%dT%H:%M:%S"),
             "orderby": "time",
-        })
+        }
+
+    def recent(self, latitude: float, longitude: float, radius_km: float,
+               min_magnitude: float) -> List[SeismicEvent]:
+        params = urllib.parse.urlencode(self.query_params(
+            latitude, longitude, radius_km, min_magnitude))
         url = f"{self.ENDPOINT}?{params}"
         try:
             with urllib.request.urlopen(url, timeout=self.timeout) as resp:
