@@ -55,7 +55,7 @@ Weather lane (23).
 | 17 | `GitHub` | `4j2txbjjdd-cmd/harbor-storm` — the repository this submitted tree is published from, and the one the reproduce commands below clone. Development history is kept in a separate private engineering repository; what is published here is the frozen submitted tree, not that history |
 | 18 | `pytest` | `pytest==9.1.1`; 314 passing tests |
 | 19 | `Cloud Run` | service `harbor-storm` in `us-central1` serving the portal publicly at <https://harbor-storm-801248256447.us-central1.run.app> (deployed 2026-08-30); one pinned instance per `deploy/service.yaml`'s trace-ordering rationale; Firestore-durable runs (database `harbor`) |
-| 20 | `Cloud Build` | built image `…/harbor/harbor-storm:portal-5bf0794` from the submitted tree, 2026-08-30 |
+| 20 | `Cloud Build` | built images `…/harbor/harbor-storm:portal-5bf0794` (2026-08-30) and `portal-c75a6f8` (2026-08-31 — the one the service currently runs) from the submitted tree |
 | 22 | `Cloud Scheduler` | job `relief-observe` (`*/30 * * * *`, ENABLED, `us-central1`) re-observes the standing ReliefRun mission on the deployed service; observations are content-addressed, so a redelivery applies at most once |
 | 23 | `Google Weather API (live lane)` | the deployed service runs `WEATHER_PROVIDER=google` with real Rasuwa-region coordinates via `SITES_JSON` (`/relief/config` reports them); first live observation re-verified the standing commitment against a real forecast (severe hours `[]` at capture — the commitment survived, which is the honest outcome of calm weather) |
 
@@ -112,7 +112,8 @@ five bounded tools — `claim_work`, `read_facts`, `report_constraint`,
 **`Artifact Registry` — reinstated 2026-08-30.** The analysis below was true
 when written: nothing pulled the image. It is preserved because the state it
 describes has since changed — the Cloud Run service deployed on 2026-08-30
-pulls `…/harbor/harbor-storm:portal-5bf0794` from this registry, so the tag
+pulls `…/harbor/harbor-storm:portal-c75a6f8` (originally `portal-5bf0794`)
+from this registry, so the tag
 is now legitimately exercised (count it as tag 21).
 
 **`Artifact Registry` — DROPPED. Real, but not in the submitted path.**
